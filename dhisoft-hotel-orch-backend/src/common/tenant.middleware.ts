@@ -11,11 +11,18 @@ export class TenantMiddleware implements NestMiddleware {
   ) {}
 
   async use(request: Request, _response: Response, next: NextFunction) {
-    const path = request.path.toLowerCase();
+    // Depending on the adapter/proxy, Express may expose the route through
+    // `path`, `url`, or `originalUrl`. Use all available forms so public
+    // control-plane endpoints can never fall through to tenant resolution.
+    const routePath = [request.path, request.url, request.originalUrl]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
     if (
-      path.includes('/health') ||
-      path.startsWith('/docs') ||
-      /(^|\/)platform(-auth)?(\/|$)/.test(path)
+      routePath.includes('/health') ||
+      routePath.includes('/docs') ||
+      routePath.includes('/platform-auth') ||
+      routePath.includes('/platform/')
     ) {
       return next();
     }
