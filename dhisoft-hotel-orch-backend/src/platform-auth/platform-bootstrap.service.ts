@@ -169,8 +169,6 @@ export class PlatformBootstrapService implements OnApplicationBootstrap {
   }
 
   private async ensureInitialOwner() {
-    if ((await this.prisma.platformUser.count()) > 0) return;
-
     const email = this.config
       .get<string>('PLATFORM_BOOTSTRAP_EMAIL')
       ?.trim()
@@ -193,6 +191,37 @@ export class PlatformBootstrapService implements OnApplicationBootstrap {
       return;
     }
 
+    const syncConfiguredOwner =
+      this.config.get<string>('PLATFORM_BOOTSTRAP_SYNC') === 'true';
+    const existingConfiguredOwner = await this.prisma.platformUser.findUnique({
+      where: { email },
+    });
+
+    if (existingConfiguredOwner) {
+      if (!syncConfiguredOwner) return;
+
+      await this.prisma.platformUser.update({
+        where: { id: existingConfiguredOwner.id },
+        data: {
+          name,
+          passwordHash: await bcrypt.hash(password, 12),
+          role: 'PLATFORM_OWNER',
+          status: 'ACTIVE',
+        },
+      });
+      this.logger.warn(
+        `Configured platform owner synchronized for ${email}; disable PLATFORM_BOOTSTRAP_SYNC after login.`,
+      );
+      return;
+    }
+
+    if (!syncConfiguredOwner && (await this.prisma.platformUser.count()) > 0) {
+      this.logger.warn(
+        `Configured platform owner ${email} was not found while other platform users exist. Set PLATFORM_BOOTSTRAP_SYNC=true for an explicit owner rotation.`,
+      );
+      return;
+    }
+
     await this.prisma.platformUser.create({
       data: {
         email,
@@ -203,6 +232,6 @@ export class PlatformBootstrapService implements OnApplicationBootstrap {
         mfaRequired: true,
       },
     });
-    this.logger.log(`Initial platform owner created for ${email}`);
+    this.logger.log(`Platform owner created for ${email}`);
   }
 }
