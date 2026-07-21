@@ -2,7 +2,7 @@ import axios from 'axios';
 import { clearPlatformSession, clearTenantSession } from '../auth/session';
 
 const baseURL =
-  import.meta.env.VITE_API_URL ?? 'http://localhost:6006/api/v1';
+  import.meta.env.VITE_API_URL ?? 'http://localhost:6006/api';
 
 const tenantApi = axios.create({ baseURL });
 export const platformApi = axios.create({ baseURL });
