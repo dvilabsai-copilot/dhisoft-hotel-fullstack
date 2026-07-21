@@ -1,0 +1,2 @@
+import { Injectable } from '@nestjs/common'; import { PrismaService } from '../common/prisma.service'; import { RegisterMediaDto } from './dto/media.dto';
+@Injectable() export class MediaService {constructor(private prisma:PrismaService){} list(tenantId:string){return this.prisma.mediaAsset.findMany({where:{tenantId},orderBy:{createdAt:'desc'},take:200})} register(tenantId:string,dto:RegisterMediaDto){return this.prisma.mediaAsset.create({data:{tenantId,...dto}})} }

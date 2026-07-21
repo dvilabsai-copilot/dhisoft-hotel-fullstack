@@ -1,0 +1,1 @@
+import { Module } from '@nestjs/common'; import { WebsiteController } from './website.controller'; import { WebsiteService } from './website.service'; import { WebsiteContentValidator } from './website-content.validator'; @Module({controllers:[WebsiteController],providers:[WebsiteService,WebsiteContentValidator],exports:[WebsiteService]}) export class WebsiteModule {}

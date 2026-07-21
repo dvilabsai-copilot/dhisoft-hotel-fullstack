@@ -1,0 +1,2 @@
+import { Type } from 'class-transformer'; import { IsDateString, IsInt, IsOptional, IsString, Min } from 'class-validator';
+export class AvailabilitySearchDto { @IsString() propertyId!:string; @IsDateString() checkIn!:string; @IsDateString() checkOut!:string; @Type(()=>Number) @IsInt() @Min(1) rooms!:number; @Type(()=>Number) @IsInt() @Min(1) adults!:number; @Type(()=>Number) @IsInt() @Min(0) children!:number; @IsOptional() @IsString() promoCode?:string; }

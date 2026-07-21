@@ -1,0 +1,9 @@
+export type Section={id:string;type:string;settings:Record<string,any>};
+export type Theme={id?:string;name:string;key:string;config:Record<string,any>};
+export type RatePlan={id:string;code:string;name:string;mealPlan:string;baseRate?:string|number;cancellationPolicy?:Record<string,any>};
+export type RoomType={id:string;name:string;slug:string;description:string;maxAdults:number;maxChildren:number;maxOccupancy:number;inventoryCount:number;images:any;amenities:any;ratePlans:RatePlan[]};
+export type Property={id:string;name:string;slug:string;destination:string;description:string;address:string;contactEmail:string;phone:string;currency:string;taxPercentage:string|number;images:any;amenities:any;roomTypes:RoomType[]};
+export type Offer={id:string;title:string;slug:string;description:string;imageUrl?:string;promoCode?:string;discountValue:string|number};
+export type SitePage={id?:string;title:string;slug:string;status?:string;draftContent:{sections:Section[]};publishedContent?:{sections:Section[]};seo:Record<string,any>;navigation:any[];updatedAt?:string};
+export type SitePayload={theme:Theme|null;pages:SitePage[];properties:Property[];offers:Offer[]};
+export type AvailabilityOption={propertyId:string;roomType:RoomType;ratePlan:RatePlan;nights:number;nightly:{date:string;rate:number;availableRooms:number}[];subtotal:number;tax:number;total:number;currency:string};

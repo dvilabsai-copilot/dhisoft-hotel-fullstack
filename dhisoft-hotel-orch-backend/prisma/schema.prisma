@@ -1,0 +1,502 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum TenantStatus {
+  ACTIVE
+  SUSPENDED
+}
+enum UserRole {
+  SUPER_ADMIN
+  TENANT_ADMIN
+  RESERVATION_MANAGER
+  RESERVATION_AGENT
+  ACCOUNTS
+  CONTENT_EDITOR
+  VIEWER
+}
+enum UserStatus {
+  ACTIVE
+  DISABLED
+}
+enum PageStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+enum ReservationStatus {
+  HOLD
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+  FAILED
+}
+enum ReservationSource {
+  WEBSITE
+  DIRECT
+  PHONE
+  EMAIL
+  WHATSAPP
+  AGENT
+  COMPANY
+  OTA
+}
+enum PaymentStatus {
+  INITIATED
+  PENDING
+  VERIFIED
+  PAID
+  FAILED
+  PARTIALLY_PAID
+  REFUNDED
+  VOID
+}
+enum PaymentMethod {
+  GATEWAY
+  UPI
+  BANK_TRANSFER
+  CASH
+  COMPANY_CREDIT
+  OTHER
+}
+enum SyncStatus {
+  PENDING
+  PROCESSING
+  SUCCEEDED
+  FAILED
+  RETRYING
+}
+enum SyncDirection {
+  INBOUND
+  OUTBOUND
+}
+enum IntegrationEntityType {
+  PROPERTY
+  ROOM_TYPE
+  RATE_PLAN
+  RESERVATION
+}
+
+enum EnquiryStatus {
+  NEW
+  IN_PROGRESS
+  CLOSED
+  SPAM
+}
+
+model Tenant {
+  id String @id @default(uuid()) @db.Uuid
+  name String
+  slug String @unique
+  status TenantStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users User[]
+  properties Property[]
+  themes SiteTheme[]
+  pages SitePage[]
+  media MediaAsset[]
+  offers Offer[]
+  guests Guest[]
+  reservations Reservation[]
+  payments Payment[]
+  mappings IntegrationMapping[]
+  syncJobs SyncJob[]
+  auditLogs AuditLog[]
+  enquiries Enquiry[]
+}
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  email String
+  passwordHash String
+  name String
+  role UserRole
+  status UserStatus @default(ACTIVE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  propertyAccess UserPropertyAccess[]
+  @@unique([tenantId,email])
+  @@index([tenantId,role])
+}
+
+model UserPropertyAccess {
+  userId String @db.Uuid
+  propertyId String @db.Uuid
+  user User @relation(fields:[userId], references:[id], onDelete:Cascade)
+  property Property @relation(fields:[propertyId], references:[id], onDelete:Cascade)
+  @@id([userId,propertyId])
+}
+
+model Property {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  name String
+  slug String
+  destination String
+  description String @db.Text
+  address String @db.Text
+  contactEmail String
+  phone String
+  timezone String @default("Asia/Kolkata")
+  currency String @default("INR")
+  taxPercentage Decimal @db.Decimal(5,2) @default(18)
+  active Boolean @default(true)
+  images Json
+  amenities Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  roomTypes RoomType[]
+  ratePlans RatePlan[]
+  inventoryDays InventoryDay[]
+  reservations Reservation[]
+  reservationRooms ReservationRoom[]
+  offers Offer[]
+  enquiries Enquiry[]
+  propertyAccess UserPropertyAccess[]
+  @@unique([tenantId,slug])
+  @@index([tenantId,active])
+}
+
+model RoomType {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  propertyId String @db.Uuid
+  property Property @relation(fields:[propertyId], references:[id], onDelete:Cascade)
+  name String
+  slug String
+  description String @db.Text
+  maxAdults Int
+  maxChildren Int
+  maxOccupancy Int
+  baseOccupancy Int @default(2)
+  extraAdultRate Decimal @db.Decimal(12,2) @default(0)
+  extraChildRate Decimal @db.Decimal(12,2) @default(0)
+  inventoryCount Int
+  active Boolean @default(true)
+  images Json
+  amenities Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ratePlans RatePlan[]
+  inventoryDays InventoryDay[]
+  reservationRooms ReservationRoom[]
+  @@unique([propertyId,slug])
+  @@index([tenantId,propertyId,active])
+}
+
+model RatePlan {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  propertyId String @db.Uuid
+  roomTypeId String @db.Uuid
+  property Property @relation(fields:[propertyId], references:[id], onDelete:Cascade)
+  roomType RoomType @relation(fields:[roomTypeId], references:[id], onDelete:Cascade)
+  code String
+  name String
+  mealPlan String
+  baseRate Decimal @db.Decimal(12,2)
+  cancellationPolicy Json
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  inventoryDays InventoryDay[]
+  reservationRooms ReservationRoom[]
+  @@unique([roomTypeId,code])
+  @@index([tenantId,propertyId,active])
+}
+
+model InventoryDay {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  propertyId String @db.Uuid
+  roomTypeId String @db.Uuid
+  ratePlanId String @db.Uuid
+  property Property @relation(fields:[propertyId], references:[id], onDelete:Cascade)
+  roomType RoomType @relation(fields:[roomTypeId], references:[id], onDelete:Cascade)
+  ratePlan RatePlan @relation(fields:[ratePlanId], references:[id], onDelete:Cascade)
+  date DateTime @db.Date
+  availableRooms Int
+  rate Decimal @db.Decimal(12,2)
+  stopSell Boolean @default(false)
+  closedToArrival Boolean @default(false)
+  closedToDeparture Boolean @default(false)
+  minLengthOfStay Int @default(1)
+  version Int @default(0)
+  source String @default("LOCAL")
+  updatedAt DateTime @updatedAt
+  @@unique([ratePlanId,date])
+  @@index([tenantId,propertyId,date])
+  @@index([roomTypeId,date])
+}
+
+model SiteTheme {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  name String
+  key String
+  config Json
+  active Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  pages SitePage[]
+  @@unique([tenantId,key])
+}
+
+model SitePage {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  themeId String? @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  theme SiteTheme? @relation(fields:[themeId], references:[id], onDelete:SetNull)
+  title String
+  slug String
+  status PageStatus @default(DRAFT)
+  draftContent Json
+  publishedContent Json?
+  seo Json
+  navigation Json
+  publishedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  versions SitePageVersion[]
+  @@unique([tenantId,slug])
+  @@index([tenantId,status])
+}
+
+model SitePageVersion {
+  id String @id @default(uuid()) @db.Uuid
+  pageId String @db.Uuid
+  page SitePage @relation(fields:[pageId], references:[id], onDelete:Cascade)
+  version Int
+  content Json
+  createdById String? @db.Uuid
+  createdAt DateTime @default(now())
+  @@unique([pageId,version])
+}
+
+model MediaAsset {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  filename String
+  url String
+  mimeType String
+  sizeBytes Int
+  altText String?
+  createdAt DateTime @default(now())
+  @@index([tenantId,createdAt])
+}
+
+model Offer {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  propertyId String? @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  property Property? @relation(fields:[propertyId], references:[id], onDelete:Cascade)
+  title String
+  slug String
+  description String @db.Text
+  imageUrl String?
+  discountType String
+  discountValue Decimal @db.Decimal(12,2)
+  promoCode String?
+  bookingStart DateTime?
+  bookingEnd DateTime?
+  stayStart DateTime?
+  stayEnd DateTime?
+  blackoutDates Json
+  terms Json
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([tenantId,slug])
+}
+
+model Guest {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  firstName String
+  lastName String
+  email String
+  mobile String
+  country String @default("IN")
+  address String?
+  gstin String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  reservations Reservation[]
+  @@index([tenantId,email])
+  @@index([tenantId,mobile])
+}
+
+model Reservation {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  propertyId String @db.Uuid
+  guestId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  property Property @relation(fields:[propertyId], references:[id])
+  guest Guest @relation(fields:[guestId], references:[id])
+  bookingRef String
+  status ReservationStatus @default(HOLD)
+  source ReservationSource
+  externalSourceRef String?
+  currency String @default("INR")
+  roomSubtotal Decimal @db.Decimal(12,2)
+  taxTotal Decimal @db.Decimal(12,2)
+  discountTotal Decimal @db.Decimal(12,2) @default(0)
+  grandTotal Decimal @db.Decimal(12,2)
+  paidTotal Decimal @db.Decimal(12,2) @default(0)
+  balanceTotal Decimal @db.Decimal(12,2)
+  holdExpiresAt DateTime?
+  specialRequest String? @db.Text
+  internalNotes String? @db.Text
+  cancellationReason String? @db.Text
+  confirmedAt DateTime?
+  cancelledAt DateTime?
+  createdById String? @db.Uuid
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  rooms ReservationRoom[]
+  payments Payment[]
+  syncJobs SyncJob[]
+  @@unique([tenantId,bookingRef])
+  @@index([tenantId,propertyId,status,createdAt])
+  @@index([tenantId,holdExpiresAt])
+}
+
+model ReservationRoom {
+  id String @id @default(uuid()) @db.Uuid
+  reservationId String @db.Uuid
+  propertyId String @db.Uuid
+  roomTypeId String @db.Uuid
+  ratePlanId String @db.Uuid
+  reservation Reservation @relation(fields:[reservationId], references:[id], onDelete:Cascade)
+  property Property @relation(fields:[propertyId], references:[id])
+  roomType RoomType @relation(fields:[roomTypeId], references:[id])
+  ratePlan RatePlan @relation(fields:[ratePlanId], references:[id])
+  checkIn DateTime @db.Date
+  checkOut DateTime @db.Date
+  quantity Int
+  adults Int
+  children Int
+  nightlyBreakdown Json
+  subtotal Decimal @db.Decimal(12,2)
+  @@index([reservationId])
+}
+
+model Payment {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  reservationId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  reservation Reservation @relation(fields:[reservationId], references:[id], onDelete:Cascade)
+  amount Decimal @db.Decimal(12,2)
+  currency String @default("INR")
+  method PaymentMethod
+  status PaymentStatus @default(INITIATED)
+  provider String
+  providerReference String?
+  idempotencyKey String @unique
+  proofUrl String?
+  notes String?
+  verifiedById String? @db.Uuid
+  verifiedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  events PaymentEvent[]
+  @@index([tenantId,reservationId,status])
+}
+
+model PaymentEvent {
+  id String @id @default(uuid()) @db.Uuid
+  paymentId String @db.Uuid
+  payment Payment @relation(fields:[paymentId], references:[id], onDelete:Cascade)
+  providerEventId String @unique
+  payload Json
+  createdAt DateTime @default(now())
+}
+
+model IntegrationMapping {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  provider String
+  entityType IntegrationEntityType
+  internalId String
+  externalId String
+  metadata Json
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([tenantId,provider,entityType,internalId])
+  @@unique([tenantId,provider,entityType,externalId])
+}
+
+model SyncJob {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  reservationId String? @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  reservation Reservation? @relation(fields:[reservationId], references:[id], onDelete:SetNull)
+  provider String
+  direction SyncDirection
+  operation String
+  status SyncStatus @default(PENDING)
+  payload Json
+  response Json?
+  attemptCount Int @default(0)
+  nextAttemptAt DateTime?
+  lastError String? @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([tenantId,status,nextAttemptAt])
+}
+
+model AuditLog {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  actorUserId String? @db.Uuid
+  action String
+  entityType String
+  entityId String
+  before Json?
+  after Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  @@index([tenantId,entityType,entityId,createdAt])
+}
+
+
+model Enquiry {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  propertyId String? @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  property Property? @relation(fields:[propertyId], references:[id], onDelete:SetNull)
+  type String
+  name String
+  email String
+  phone String?
+  message String @db.Text
+  status EnquiryStatus @default(NEW)
+  sourcePage String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([tenantId,status,createdAt])
+}

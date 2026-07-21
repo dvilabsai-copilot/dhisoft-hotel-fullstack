@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>RainWood Hotels | Direct Booking & Reservation Management Prototype</title>
+  <meta name="description" content="RainWood Hotels direct booking engine, reservation management, payment workflow, reports and AxisRooms synchronization SPA prototype." />
+  <style>
+    :root{
+      --navy:#0f3d5f; --navy-2:#184f78; --gold:#c99b42; --ink:#172333; --muted:#66758a;
+      --line:#dbe4ee; --soft:#f5f8fb; --white:#fff; --green:#1f8a5b; --red:#b44545;
+      --shadow:0 18px 45px rgba(15,61,95,.13); --radius:22px; --max:1180px;
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth} body{margin:0;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--ink);background:linear-gradient(180deg,#f7fbff 0%,#fff 38%,#f7fbff 100%);line-height:1.55}
+    a{color:inherit;text-decoration:none} img{max-width:100%;display:block}
+    .topbar{background:#092a43;color:#d8e8f3;font-size:13px;letter-spacing:.02em}
+    .topbar .wrap{max-width:var(--max);margin:auto;padding:8px 20px;display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap}
+    .pill-mini{display:inline-flex;align-items:center;gap:8px;padding:5px 10px;border:1px solid rgba(255,255,255,.22);border-radius:999px;color:#fff;background:rgba(255,255,255,.06)}
+    header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);backdrop-filter:blur(16px);border-bottom:1px solid rgba(15,61,95,.10);box-shadow:0 8px 25px rgba(15,61,95,.06)}
+    .nav{max-width:var(--max);margin:auto;min-height:78px;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+    .brand{display:flex;align-items:center;gap:12px;min-width:250px} .brand img{width:112px;height:auto;object-fit:contain}
+    .brand-text strong{display:block;color:var(--navy);font-size:15px;line-height:1.1} .brand-text span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+    .navlinks{display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap}
+    .navlinks a{padding:9px 11px;border-radius:999px;color:#31526b;font-weight:750;font-size:14px} .navlinks a:hover,.navlinks a.active{background:#eaf3f9;color:var(--navy)}
+    .actions{display:flex;align-items:center;gap:10px}
+    .btn{border:0;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:43px;padding:12px 18px;border-radius:999px;font-weight:850;color:#fff;background:linear-gradient(135deg,var(--navy),var(--navy-2));box-shadow:0 12px 26px rgba(15,61,95,.22);transition:.2s transform,.2s box-shadow;font-size:14px}
+    .btn:hover{transform:translateY(-1px);box-shadow:0 16px 34px rgba(15,61,95,.28)} .btn.secondary{background:#fff;color:var(--navy);border:1px solid rgba(15,61,95,.16);box-shadow:none} .btn.gold{background:linear-gradient(135deg,#b98320,#d6ad55);color:#172333}
+    .hamburger{display:none} .route{display:none} .route.active{display:block} .container{max-width:var(--max);margin:auto;padding:0 20px}
+    .hero{position:relative;overflow:hidden;color:#fff;min-height:640px;display:flex;align-items:center;background:linear-gradient(105deg,rgba(4,31,51,.88) 0%,rgba(15,61,95,.72) 46%,rgba(15,61,95,.18) 100%),url("https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1600&q=80") center/cover no-repeat}
+    .hero-inner{position:relative;z-index:2;width:100%;display:grid;grid-template-columns:1.05fr .75fr;gap:38px;align-items:center;padding:80px 0}
+    .eyebrow{display:inline-flex;align-items:center;gap:8px;padding:8px 13px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22);border-radius:999px;color:#f8e7b7;font-weight:850;font-size:13px;letter-spacing:.03em;text-transform:uppercase}
+    h1,h2,h3{margin:0 0 12px;line-height:1.12;color:var(--navy)} .hero h1{color:#fff;font-size:clamp(38px,6vw,72px);max-width:860px;letter-spacing:-.045em;margin-top:20px} .hero p{max-width:760px;font-size:18px;color:#e7f0f6;margin:18px 0 28px} .hero-actions{display:flex;gap:14px;flex-wrap:wrap}
+    .hero-stat{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:720px;margin-top:34px} .stat{padding:18px;border-radius:18px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)} .stat strong{font-size:24px;color:#fff;display:block} .stat span{font-size:13px;color:#cfe0eb}
+    .search-card,.panel,.card{background:#fff;border:1px solid rgba(15,61,95,.12);border-radius:var(--radius);box-shadow:var(--shadow)} .search-card{color:var(--ink);padding:22px} .search-card h3{font-size:22px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px} label{font-size:12px;font-weight:850;color:#496278;text-transform:uppercase;letter-spacing:.04em} select,input,textarea{width:100%;min-height:44px;margin-top:6px;padding:11px 12px;border:1px solid #cfdae5;border-radius:12px;font:inherit;color:var(--ink);background:#fff;outline:none} textarea{min-height:112px;resize:vertical} select:focus,input:focus,textarea:focus{border-color:var(--navy);box-shadow:0 0 0 4px rgba(15,61,95,.09)} .full{grid-column:1/-1}
+    .section{padding:72px 0} .section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:30px;margin-bottom:28px} .section-head .kicker{color:var(--gold);font-weight:900;letter-spacing:.06em;text-transform:uppercase;font-size:13px;margin-bottom:10px} .section-head h2{font-size:clamp(30px,4vw,46px);letter-spacing:-.025em} .section-head p{max-width:720px;color:var(--muted);margin:0;font-size:16px}
+    .cards{display:grid;grid-template-columns:repeat(3,1fr);gap:20px} .card{overflow:hidden;box-shadow:0 14px 38px rgba(15,61,95,.08)} .card-body{padding:22px} .card h3{font-size:22px} .card p{color:var(--muted);margin:0 0 16px} .card-img{height:218px;background:linear-gradient(135deg,#dbe8ef,#fff);overflow:hidden} .card-img img{width:100%;height:100%;object-fit:cover;transition:.35s transform} .card:hover .card-img img{transform:scale(1.04)}
+    .tag-row{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0} .tag{padding:6px 10px;border-radius:999px;background:#eef5fa;color:var(--navy);font-weight:850;font-size:12px} .tag.gold{background:#fff4d8;color:#735014}
+    .split{display:grid;grid-template-columns:.95fr 1.05fr;gap:24px;align-items:stretch} .panel{padding:26px;box-shadow:0 14px 38px rgba(15,61,95,.07)} .panel.tint{background:linear-gradient(180deg,#f7fbff,#fff)}
+    .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:14px} .flow-step{position:relative;padding:18px;min-height:150px;border-radius:18px;background:#fff;border:1px solid rgba(15,61,95,.12);box-shadow:0 12px 28px rgba(15,61,95,.06)} .num{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--navy);color:#fff;font-weight:900;margin-bottom:12px} .flow-step h3{font-size:17px;margin-bottom:8px} .flow-step p{font-size:14px;color:var(--muted);margin:0}
+    .table-wrap{overflow:auto;border-radius:18px;border:1px solid var(--line);background:#fff} table{width:100%;border-collapse:collapse;min-width:760px;background:#fff} th{background:var(--navy);color:#fff;text-align:left;padding:13px 14px;font-size:13px;letter-spacing:.02em} td{padding:13px 14px;border-bottom:1px solid var(--line);vertical-align:top;color:#34485d} tr:last-child td{border-bottom:0}
+    .status{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:999px;font-weight:850;font-size:12px} .status.ok{background:#e9f7ef;color:var(--green)} .status.warn{background:#fff4dd;color:#8c5c10} .status.err{background:#ffecec;color:var(--red)}
+    .booking-shell{display:grid;grid-template-columns:290px 1fr;gap:22px;align-items:start} .steps-nav{position:sticky;top:110px;background:#fff;border:1px solid rgba(15,61,95,.12);border-radius:var(--radius);padding:16px;box-shadow:0 10px 30px rgba(15,61,95,.07)} .steps-nav button{width:100%;border:0;background:transparent;text-align:left;padding:12px;border-radius:14px;color:#45637b;font-weight:850;cursor:pointer;margin-bottom:5px} .steps-nav button.active,.steps-nav button:hover{background:#eaf3f9;color:var(--navy)} .booking-step{display:none} .booking-step.active{display:block}
+    .room-card{display:grid;grid-template-columns:210px 1fr auto;gap:18px;padding:16px;border:1px solid var(--line);border-radius:18px;margin-bottom:14px;background:#fff;align-items:center} .room-card img{height:140px;width:100%;object-fit:cover;border-radius:14px} .price{font-size:25px;font-weight:950;color:var(--navy)} .small{font-size:13px;color:var(--muted)} .admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px} .metric{background:#fff;border:1px solid rgba(15,61,95,.12);border-radius:18px;padding:20px;box-shadow:0 12px 28px rgba(15,61,95,.06)} .metric strong{font-size:30px;color:var(--navy);display:block;line-height:1} .metric span{color:var(--muted);font-size:13px;font-weight:850;text-transform:uppercase}
+    .notice{border-left:5px solid var(--gold);background:#fff8e6;padding:18px 20px;border-radius:16px;color:#5d461a} .gallery{display:grid;grid-template-columns:1.4fr .8fr .8fr;gap:14px;margin-bottom:24px} .gallery img{width:100%;height:220px;object-fit:cover;border-radius:18px} .gallery img:first-child{height:454px;grid-row:span 2}
+    .footer{background:#092a43;color:#d7e6f0;padding:48px 0 22px;margin-top:70px} .footer-grid{display:grid;grid-template-columns:1.1fr .7fr .7fr;gap:24px;margin-bottom:26px} .footer h3{color:#fff} .footer p,.footer a{color:#c7d9e5} .foot-bottom{border-top:1px solid rgba(255,255,255,.12);padding-top:18px;color:#a9bdca;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;font-size:13px}
+    .toast{position:fixed;bottom:22px;right:22px;background:#0c304b;color:#fff;padding:14px 16px;border-radius:16px;box-shadow:0 18px 40px rgba(0,0,0,.22);transform:translateY(25px);opacity:0;pointer-events:none;transition:.25s;z-index:80;max-width:360px} .toast.show{opacity:1;transform:translateY(0)}
+    .modal{position:fixed;inset:0;background:rgba(3,17,29,.62);display:none;align-items:center;justify-content:center;padding:20px;z-index:70} .modal.show{display:flex} .modal-card{width:min(760px,100%);max-height:88vh;overflow:auto;background:#fff;border-radius:24px;padding:26px;box-shadow:0 28px 80px rgba(0,0,0,.25)} .close{float:right;border:0;background:#eaf1f6;color:var(--navy);width:38px;height:38px;border-radius:50%;font-size:20px;cursor:pointer}
+    @media(max-width:980px){.hero-inner,.split,.booking-shell{grid-template-columns:1fr}.cards{grid-template-columns:1fr 1fr}.flow{grid-template-columns:1fr 1fr}.admin-grid{grid-template-columns:1fr 1fr}.gallery{grid-template-columns:1fr 1fr}.gallery img:first-child{grid-column:1/-1;height:300px}.steps-nav{position:relative;top:auto}}
+    @media(max-width:760px){.topbar{display:none}.nav{align-items:flex-start}.brand{min-width:0}.brand img{width:92px}.hamburger{display:inline-flex}.navlinks{display:none;width:100%;order:3;padding-top:10px}.navlinks.open{display:flex;flex-direction:column;align-items:stretch}.actions .secondary:not(.hamburger){display:none}.hero{min-height:auto}.hero-inner{padding:54px 0}.hero-stat,.cards,.flow,.admin-grid,.footer-grid{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.room-card{grid-template-columns:1fr}.section{padding:50px 0}.section-head{display:block}.gallery{grid-template-columns:1fr}.gallery img,.gallery img:first-child{height:240px}}
+  
+    .crs-window{
+      border:1px solid #c7d8e8;
+      border-radius:18px;
+      overflow:hidden;
+      background:#f7fbff;
+      box-shadow:0 18px 45px rgba(15,61,95,.12);
+      margin-top:18px;
+    }
+    .crs-titlebar{
+      background:linear-gradient(180deg,#0f4d84,#0a3764);
+      color:#fff;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+      padding:12px 16px;
+      font-size:13px;
+      font-weight:850;
+    }
+    .crs-menu{
+      background:#7fb8d5;
+      color:#073452;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      padding:8px 12px;
+      font-size:12px;
+      font-weight:850;
+    }
+    .crs-menu span{
+      background:rgba(255,255,255,.55);
+      border:1px solid rgba(15,61,95,.15);
+      border-radius:999px;
+      padding:5px 9px;
+    }
+    .crs-body{padding:14px;background:#fff}
+    .mini-grid{
+      display:grid;
+      grid-template-columns:repeat(6,1fr);
+      gap:10px;
+      margin:8px 0 12px;
+    }
+    .mini-grid .field{
+      background:#f7fbff;
+      border:1px solid #d6e4ef;
+      border-radius:12px;
+      padding:9px;
+      min-height:54px;
+    }
+    .mini-grid b{
+      display:block;
+      font-size:11px;
+      color:#557087;
+      text-transform:uppercase;
+      margin-bottom:4px;
+    }
+    .mini-grid span{font-weight:850;color:#173d56;font-size:13px}
+    .crs-table{
+      min-width:1050px;
+      font-size:12px;
+    }
+    .crs-table th{background:#69a8cc;color:#08314d;padding:9px 8px}
+    .crs-table td{padding:8px;border-color:#e3eef6}
+    .crs-input{
+      display:inline-block;
+      min-width:54px;
+      padding:4px 7px;
+      border:1px solid #c9d8e5;
+      border-radius:7px;
+      background:#fff;
+      color:#243b52;
+      font-weight:750;
+    }
+    .crs-tabs{
+      display:flex;
+      flex-wrap:wrap;
+      gap:6px;
+      background:#e8f3fa;
+      border-top:1px solid #c7d8e8;
+      border-bottom:1px solid #c7d8e8;
+      padding:8px;
+    }
+    .crs-tabs span{
+      padding:8px 11px;
+      border-radius:10px 10px 0 0;
+      background:#ffffff;
+      border:1px solid #c7d8e8;
+      color:#174663;
+      font-size:12px;
+      font-weight:850;
+    }
+    .crs-tabs span.active{background:#fff6dd;border-bottom-color:#fff6dd;color:#744e10}
+    .crs-form{
+      display:grid;
+      grid-template-columns:1.1fr .9fr;
+      gap:20px;
+      padding:14px;
+      background:#fff;
+    }
+    .crs-form-grid{
+      display:grid;
+      grid-template-columns:150px 1fr;
+      gap:8px 10px;
+      align-items:center;
+    }
+    .crs-form-grid label{
+      font-size:12px;
+      text-transform:none;
+      letter-spacing:0;
+      color:#496278;
+    }
+    .crs-form-grid input,.crs-form-grid select{
+      min-height:34px;
+      margin:0;
+      padding:6px 9px;
+      border-radius:8px;
+      font-size:13px;
+    }
+    .email-flow{
+      display:grid;
+      grid-template-columns:repeat(5,1fr);
+      gap:12px;
+    }
+    .email-card{
+      position:relative;
+      background:#fff;
+      border:1px solid rgba(15,61,95,.12);
+      border-radius:18px;
+      padding:18px;
+      box-shadow:0 12px 28px rgba(15,61,95,.06);
+    }
+    .email-card h3{font-size:16px}
+    .email-card p{font-size:13px;color:var(--muted);margin:0}
+    .voucher-preview{
+      border:1px solid #cfd8e3;
+      border-radius:18px;
+      background:#fff;
+      overflow:hidden;
+      box-shadow:0 16px 36px rgba(15,61,95,.08);
+    }
+    .voucher-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      padding:18px;
+      background:#f4efe4;
+      border-bottom:1px solid #d8cdb9;
+    }
+    .voucher-logo{
+      width:170px;
+      height:62px;
+      border-radius:12px;
+      background:#fff;
+      display:grid;
+      place-items:center;
+      font-weight:950;
+      color:#71808a;
+      letter-spacing:.05em;
+    }
+    .voucher-title{font-weight:950;color:#173d56}
+    .voucher-section{padding:16px 18px;border-bottom:1px solid #e5edf4}
+    .voucher-section:last-child{border-bottom:0}
+    .report-toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      align-items:center;
+      justify-content:space-between;
+      margin-bottom:14px;
+    }
+    .report-filters{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+    }
+    .report-filters span{
+      padding:8px 10px;
+      background:#eef6fb;
+      border:1px solid #d6e4ef;
+      border-radius:10px;
+      font-size:12px;
+      font-weight:850;
+      color:#174663;
+    }
+    .group-row td{
+      background:#fff1d3!important;
+      color:#744e10;
+      font-weight:950;
+    }
+    .mvp-boundary{
+      background:linear-gradient(135deg,#fff8e6,#ffffff);
+      border:1px solid #efd9a5;
+      border-radius:20px;
+      padding:20px;
+      margin-top:20px;
+    }
+    @media(max-width:980px){
+      .mini-grid{grid-template-columns:repeat(2,1fr)}
+      .crs-form{grid-template-columns:1fr}
+      .email-flow{grid-template-columns:1fr 1fr}
+    }
+    @media(max-width:760px){
+      .mini-grid,.email-flow{grid-template-columns:1fr}
+      .crs-form-grid{grid-template-columns:1fr}
+    }
+
+  
+    .hotsoft-report-window{border:1px solid #b9c7d6;border-radius:18px;overflow:hidden;background:#e8edf2;box-shadow:0 20px 55px rgba(15,61,95,.16);margin-top:18px}
+    .hotsoft-bluebar{background:linear-gradient(180deg,#0b4e93,#09376b);color:#fff;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;gap:14px;font-weight:900;font-size:13px}
+    .hotsoft-subbar{background:#e7f3fb;border-bottom:1px solid #bdd3e5;padding:12px 14px;display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+    .hotsoft-subbar .filter{background:#fff;border:1px solid #c9d8e5;border-radius:8px;padding:7px 10px;color:#173d56;font-size:12px;font-weight:850}
+    .hotsoft-subbar .tool{background:#f6fbff;border:1px solid #bdd3e5;border-radius:7px;padding:6px 9px;color:#0f3d5f;font-size:12px;font-weight:900}
+    .report-popup{max-width:880px;margin:22px auto;background:#fff;border:1px solid #b9c7d6;box-shadow:0 20px 45px rgba(0,0,0,.18);border-radius:6px;overflow:hidden}
+    .report-popup-toolbar{background:#f5f5f5;border-bottom:1px solid #d2d2d2;padding:8px 12px;display:flex;justify-content:flex-end;gap:10px;color:#666;font-size:12px;font-weight:850}
+    .gold-report{width:100%;min-width:900px;border-collapse:collapse;font-size:12px;background:#fff}
+    .gold-report th{background:#d79b00;color:#fff;padding:8px 9px;border:1px solid #c58d00;text-align:right;font-size:11px}
+    .gold-report th:first-child,.gold-report td:first-child{text-align:left}.gold-report td{padding:7px 9px;border:1px solid #e8d4a8;text-align:right;color:#1c2f43;font-size:12px}
+    .gold-report .hotel-group td{background:#ffe0a8!important;color:#8a4d00;text-align:left!important;font-weight:950}
+    .gold-report .alt td{background:#f8fbff}.gold-report .total td{background:#f6d28a!important;font-weight:950;color:#1d3148}
+    .report-caption{padding:10px 12px;color:#6b5a34;background:#fff7e6;border-bottom:1px solid #e4c37f;font-weight:850;font-size:12px}
+
+  </style>
+</head>
+<body>
+  <div class="topbar"><div class="wrap"><span class="pill-mini">RainWood direct booking prototype</span><span>Reservation Management · Payment Workflow · Reports · AxisRooms Synchronization</span></div></div>
+  <header><div class="nav">
+    <a class="brand" href="#home" data-route="home"><img src="https://rainwoodhotels.com/wp-content/webp-express/webp-images/uploads/2023/09/rwh-logo.png.webp" alt="RainWood Hotels logo" onerror="this.style.display=\'none\';document.querySelector(\'.brand-fallback\').style.display=\'grid\'"><span class="brand-fallback" style="display:none;width:92px;height:58px;border-radius:14px;background:#eaf3f9;color:#0f3d5f;font-weight:900;place-items:center;font-size:11px">RAINWOOD</span><span class="brand-text"><strong>RainWood Hotels</strong><span>Reservation Management Prototype</span></span></a>
+    <nav class="navlinks" id="navlinks">
+      <a href="#home" data-route="home">Home</a><a href="#hotels" data-route="hotels">Hotels</a><a href="#hotel-detail" data-route="hotel-detail">Hotel Detail</a><a href="#booking" data-route="booking">Booking</a><a href="#reservation" data-route="reservation">Reservation</a><a href="#payments" data-route="payments">Payments</a><a href="#reports" data-route="reports">Reports</a><a href="#admin" data-route="admin">Admin</a><a href="#axisrooms" data-route="axisrooms">AxisRooms</a><a href="#contact" data-route="contact">Contact</a>
+    </nav>
+    <div class="actions"><button class="btn secondary" data-route-btn="admin">Admin Login</button><button class="btn gold" data-route-btn="booking">Book Now</button><button class="btn secondary hamburger" id="hamburger">☰</button></div>
+  </div></header>
+  <main>
+    <section id="home" class="route active">
+      <div class="hero"><div class="container hero-inner"><div><span class="eyebrow">Booking + Reservation Management MVP</span><h1>Direct booking, reservation operations, payment workflow and AxisRooms synchronization.</h1><p>A polished single-file SPA demonstration of the proposed RainWood platform: website booking, admin/manual reservation entry, online and manual payment tracking, voucher, reports and AxisRooms synchronization.</p><div class="hero-actions"><button class="btn gold" data-route-btn="booking">Try Booking Flow</button><button class="btn secondary" data-route-btn="reservation">View Reservation Flow</button></div><div class="hero-stat"><div class="stat"><strong>6</strong><span>week client plan</span></div><div class="stat"><strong>4</strong><span>core workflows</span></div><div class="stat"><strong>1</strong><span>reservation dashboard</span></div></div></div>
+      <div class="search-card"><h3>Search RainWood Stays</h3><p class="small">Static UI demo with online resort photos. Production will connect to backend APIs, reservation database, payment workflow, reports and AxisRooms sync.</p><div class="form-grid"><div class="full"><label>Destination / Hotel</label><select><option>Munnar - RainWood Aurum</option><option>Thekkady - Spices Lap Resort</option><option>Alleppey - Lakeshore Resort</option><option>Kochi - The Classik Hotel</option></select></div><div><label>Check-in</label><input type="date" value="2026-07-15"></div><div><label>Check-out</label><input type="date" value="2026-07-17"></div><div class="full"><label>Rooms & Guests</label><select><option>1 Room, 2 Adults</option><option>2 Rooms, 4 Adults</option><option>1 Room, 2 Adults, 1 Child</option></select></div><button class="btn full" data-route-btn="booking">Search Rooms</button></div></div></div></div>
+      <div class="section"><div class="container"><div class="section-head"><div><div class="kicker">MVP Positioning</div><h2>Not just a booking button. A booking engine with lightweight reservation management.</h2></div><p>The production system supports website bookings and internal reservation operations: manual booking entry, guest/stay details, payment verification, vouchers, reports and AxisRooms synchronization.</p></div><div class="cards"><div class="card"><div class="card-body"><div class="num">1</div><h3>Website Booking</h3><p>RainWood website entry points, booking CTAs, hotel search, room selection and direct confirmation journey.</p><span class="tag">Search</span><span class="tag">Voucher</span></div></div><div class="card"><div class="card-body"><div class="num">2</div><h3>Reservation Management</h3><p>Admin-created bookings for phone, email, WhatsApp, agent, company and OTA-source requests.</p><span class="tag">Manual entry</span><span class="tag">Source tracking</span></div></div><div class="card"><div class="card-body"><div class="num">3</div><h3>Payment Workflow</h3><p>Online payment plus manual payment recording, advance, balance, payment proof/reference and verification.</p><span class="tag">Advance</span><span class="tag">Balance</span></div></div><div class="card"><div class="card-body"><div class="num">4</div><h3>Reports</h3><p>Hotel-wise, source-wise, payment-wise, arrival/departure, room-night and revenue reports for operations.</p><span class="tag">Excel/PDF</span><span class="tag">MVP reports</span></div></div><div class="card"><div class="card-body"><div class="num">5</div><h3>Admin Dashboard</h3><p>Booking status, guest details, payment status, voucher download, remarks and internal instructions.</p><span class="tag">Reservation team</span><span class="tag">Accounts view</span></div></div><div class="card"><div class="card-body"><div class="num">6</div><h3>AxisRooms Sync</h3><p>Inventory, rates, restrictions and confirmed booking push/sync where applicable.</p><span class="tag">Mapping</span><span class="tag">Sync status</span></div></div></div></div></div>
+      <div class="section" style="background:var(--soft)"><div class="container"><div class="section-head"><div><div class="kicker">Featured Hotels</div><h2>RainWood stay discovery with booking-ready hotel cards.</h2></div><button class="btn secondary" data-route-btn="hotels">View All Hotels</button></div><div class="cards">
+        <article class="card"><div class="card-img"><img loading="lazy" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80" alt="RainWood Aurum Munnar"></div><div class="card-body"><div class="tag-row"><span class="tag gold">Munnar</span><span class="tag">MAP</span><span class="tag">AxisRooms mapped</span></div><h3>RainWood Aurum</h3><p>Hill-view rooms, premium dining, room amenities and booking-ready rates.</p><button class="btn secondary" data-route-btn="hotel-detail">View Hotel</button></div></article>
+        <article class="card"><div class="card-img"><img loading="lazy" src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80" alt="Spices Lap Resort"></div><div class="card-body"><div class="tag-row"><span class="tag gold">Thekkady</span><span class="tag">CP</span><span class="tag">Restriction aware</span></div><h3>Spices Lap Resort</h3><p>Resort stay with direct availability, rate-plan mapping and voucher confirmation.</p><button class="btn secondary" data-route-btn="hotel-detail">View Hotel</button></div></article>
+        <article class="card"><div class="card-img"><img loading="lazy" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80" alt="Lakeshore Resort"></div><div class="card-body"><div class="tag-row"><span class="tag gold">Alleppey</span><span class="tag">AP</span><span class="tag">Voucher ready</span></div><h3>Lakeshore Resort</h3><p>Calm waterfront stay, room/rate-plan display and booking dashboard support.</p><button class="btn secondary" data-route-btn="hotel-detail">View Hotel</button></div></article>
+      </div></div></div>
+    </section>
+    <section id="hotels" class="route"><div class="section"><div class="container"><div class="section-head"><div><div class="kicker">Hotel Listing</div><h2>Browse RainWood hotels and start a direct booking journey.</h2></div><p>Listing UI supports destination, date and guest filters. In production it will read locally synchronized AxisRooms inventory, rates and restrictions.</p></div><div class="search-card" style="margin-bottom:24px"><div class="form-grid"><div><label>Destination</label><select><option>All Destinations</option><option>Munnar</option><option>Thekkady</option><option>Alleppey</option><option>Kochi</option></select></div><div><label>Meal Plan</label><select><option>Any Rate Plan</option><option>EP</option><option>CP</option><option>MAP</option><option>AP</option></select></div><div><label>Check-in</label><input type="date" value="2026-07-15"></div><div><label>Guests</label><select><option>2 Adults</option><option>2 Adults, 1 Child</option><option>4 Adults</option></select></div></div></div><div class="cards"><article class="card"><div class="card-img"><img loading="lazy" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80" alt=""></div><div class="card-body"><h3>RainWood Aurum Munnar</h3><p>Premium mountain stay with direct booking enabled.</p><div class="tag-row"><span class="tag gold">From ₹6,800</span><span class="tag">3 rate plans</span><span class="tag">Open</span></div><button class="btn" data-route-btn="hotel-detail">View Rooms</button></div></article><article class="card"><div class="card-img"><img loading="lazy" src="https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?auto=format&fit=crop&w=1200&q=80" alt=""></div><div class="card-body"><h3>Spices Lap Resort</h3><p>Resort room availability with restriction-aware display.</p><div class="tag-row"><span class="tag gold">From ₹5,950</span><span class="tag">CP/MAP</span><span class="tag">MLOS checked</span></div><button class="btn" data-route-btn="hotel-detail">View Rooms</button></div></article><article class="card"><div class="card-img"><img loading="lazy" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?auto=format&fit=crop&w=900&q=80" alt=""></div><div class="card-body"><h3>Lakeshore Resort</h3><p>Waterfront rooms with voucher and email confirmation.</p><div class="tag-row"><span class="tag gold">From ₹7,500</span><span class="tag">AP</span><span class="tag">Pay online</span></div><button class="btn" data-route-btn="hotel-detail">View Rooms</button></div></article></div></div></div></section>
+    <section id="hotel-detail" class="route"><div class="section"><div class="container"><div class="section-head"><div><div class="kicker">Hotel Detail</div><h2>RainWood Aurum Munnar</h2></div><button class="btn gold" data-route-btn="booking">Book This Hotel</button></div><div class="gallery"><img loading="lazy" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80" alt="Hotel exterior"><img loading="lazy" src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80" alt="Hotel room"><img loading="lazy" src="https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?auto=format&fit=crop&w=900&q=80" alt="Lobby"><img loading="lazy" src="https://images.unsplash.com/photo-1540541338287-41700207dee6?auto=format&fit=crop&w=1600&q=80" alt="Restaurant"><img loading="lazy" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80" alt="Suite"></div><div class="split"><div class="panel"><h3>Property Snapshot</h3><p>Static hotel detail prototype showing how existing website content can connect into a live direct booking journey.</p><div class="tag-row"><span class="tag">Free Wi‑Fi</span><span class="tag">Restaurant</span><span class="tag">Hill View</span><span class="tag">Family Rooms</span><span class="tag">Parking</span></div><div class="notice">Production rules will enforce stop-sell, closed to arrival/departure and minimum length of stay before payment.</div></div><div class="panel"><h3>Available Rooms & Rate Plans</h3><div class="table-wrap"><table><thead><tr><th>Room Type</th><th>Rate Plan</th><th>Restriction</th><th>Rate</th><th></th></tr></thead><tbody><tr><td>Premium Valley Room</td><td>CP - Breakfast</td><td><span class="status ok">Open</span></td><td>₹6,800</td><td><button class="btn secondary" data-route-btn="booking">Select</button></td></tr><tr><td>Executive Suite</td><td>MAP - Breakfast + Dinner</td><td><span class="status ok">Open</span></td><td>₹9,250</td><td><button class="btn secondary" data-route-btn="booking">Select</button></td></tr><tr><td>Family Suite</td><td>AP - All Meals</td><td><span class="status warn">MLOS 2 nights</span></td><td>₹12,400</td><td><button class="btn secondary" data-route-btn="booking">Select</button></td></tr></tbody></table></div></div></div></div></div></section>
+    <section id="booking" class="route"><div class="section"><div class="container"><div class="section-head"><div><div class="kicker">Booking Flow</div><h2>Search → Select Room → Guest Details → Payment → Voucher</h2></div><p>This is a static simulation of the direct booking engine. It is intentionally styled as a client demo, not a final production system.</p></div><div class="booking-shell"><div class="steps-nav"><button class="booking-nav active" data-step="search">1. Search</button><button class="booking-nav" data-step="rooms">2. Rooms</button><button class="booking-nav" data-step="guest">3. Guest Details</button><button class="booking-nav" data-step="review">4. Review & Pay</button><button class="booking-nav" data-step="voucher">5. Voucher</button></div><div class="panel"><div class="booking-step active" id="step-search"><h3>Search Availability</h3><div class="form-grid"><div class="full"><label>Hotel</label><select><option>RainWood Aurum Munnar</option><option>Spices Lap Resort</option></select></div><div><label>Check-in</label><input type="date" value="2026-07-15"></div><div><label>Check-out</label><input type="date" value="2026-07-17"></div><div><label>Rooms</label><select><option>1 Room</option><option>2 Rooms</option></select></div><div><label>Guests</label><select><option>2 Adults</option><option>2 Adults, 1 Child</option></select></div><button class="btn full" data-next-step="rooms">Search Rooms</button></div></div><div class="booking-step" id="step-rooms"><h3>Select Room & Rate Plan</h3><div class="room-card"><img loading="lazy" src="https://images.unsplash.com/photo-1590490360182-c33d57733427?auto=format&fit=crop&w=900&q=80" alt=""><div><h3>Premium Valley Room</h3><p class="small">CP - Breakfast · 2 nights · Restriction status: open</p><div class="tag-row"><span class="tag">2 available</span><span class="tag">AxisRooms mapped</span></div></div><div><div class="price">₹13,600</div><button class="btn" data-next-step="guest">Select</button></div></div><div class="room-card"><img loading="lazy" src="https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=1200&q=80" alt=""><div><h3>Executive Suite</h3><p class="small">MAP - Breakfast + Dinner · 2 nights · Restriction status: open</p><div class="tag-row"><span class="tag">1 available</span><span class="tag">Voucher ready</span></div></div><div><div class="price">₹18,500</div><button class="btn" data-next-step="guest">Select</button></div></div></div><div class="booking-step" id="step-guest"><h3>Guest Details</h3><div class="form-grid"><div><label>First Name</label><input value="Rahul"></div><div><label>Last Name</label><input value="Sharma"></div><div><label>Email</label><input value="rahul@example.com"></div><div><label>Mobile</label><input value="+91 98765 43210"></div><div class="full"><label>Special Request</label><textarea>Late check-in request. Prefer valley view room.</textarea></div><button class="btn full" data-next-step="review">Continue to Review</button></div></div><div class="booking-step" id="step-review"><h3>Review & Payment</h3><div class="table-wrap"><table><tbody><tr><td>Hotel</td><td>RainWood Aurum Munnar</td></tr><tr><td>Stay</td><td>15 Jul 2026 - 17 Jul 2026, 2 nights</td></tr><tr><td>Room</td><td>Premium Valley Room / CP</td></tr><tr><td>Room Total</td><td>₹13,600</td></tr><tr><td>Taxes & Charges</td><td>₹2,448</td></tr><tr><td><strong>Total Payable</strong></td><td><strong>₹16,048</strong></td></tr></tbody></table></div><br><button class="btn gold" data-next-step="voucher">Pay Now - Demo</button></div><div class="booking-step" id="step-voucher"><h3>Booking Confirmed</h3><div class="notice">Voucher generated. Booking sync to AxisRooms is marked as pending/success based on channel-manager response in production.</div><br><div class="panel tint"><h3>RainWood Hotels Voucher</h3><p><strong>Booking Ref:</strong> RW-20260715-1048</p><p><strong>Guest:</strong> Rahul Sharma · <strong>Room:</strong> Premium Valley Room / CP</p><p><strong>Status:</strong> <span class="status ok">Payment Success</span> <span class="status warn">AxisRooms Sync Pending</span></p><button class="btn secondary" onclick="window.print()">Print Voucher</button></div></div></div></div></div></div></section>
+
+    <section id="reservation" class="route">
+      <div class="section">
+        <div class="container">
+          <div class="section-head">
+            <div><div class="kicker">Reservation Management</div><h2>CRS-style reservation entry for RainWood operations.</h2></div>
+            <p>Aligned with the client discussion and current hotsoftCRS-style workflow: reservation users need structured admin entry for direct, agent, company, OTA, email, WhatsApp and phone bookings.</p>
+          </div>
+
+          <div class="notice">
+            <strong>Client workflow observation:</strong> RainWood’s requirement is not limited to replacing a website booking button. The proposed MVP includes a lightweight reservation management backend for guest details, room details, tariff, payment status, advance/balance, booking instructions, voucher and reports.
+          </div>
+
+          <div class="crs-window">
+            <div class="crs-titlebar">
+              <span>RainWood Reservation Console</span>
+              <span>Admin: Reservation Head · Demo Mode</span>
+            </div>
+            <div class="crs-menu">
+              <span>Sys.Admin</span><span>Masters</span><span>Transaction</span><span>Reports</span><span>Dynamic Reports</span>
+            </div>
+            <div class="crs-body">
+              <div class="mini-grid">
+                <div class="field"><b>Hotel</b><span>ARBOUR</span></div>
+                <div class="field"><b>Source</b><span>COMPANY</span></div>
+                <div class="field"><b>Agent / Company</b><span>TRAVEL MADDY HOLIDAYS</span></div>
+                <div class="field"><b>Booking Type</b><span>Individual</span></div>
+                <div class="field"><b>B2B / B2C / OTA</b><span>B2B</span></div>
+                <div class="field"><b>Reservation No.</b><span>RW-3056</span></div>
+              </div>
+
+              <div class="table-wrap">
+                <table class="crs-table">
+                  <thead>
+                    <tr>
+                      <th>Hotel</th><th>Room Type</th><th>Arrival</th><th>Days</th><th>Departure</th><th>Avail Rooms</th><th>Cnfd.</th><th>WL</th><th>Pax</th><th>Extra Pax</th><th>Infant</th><th>Plan</th><th>Slab</th><th>Tariff/Night</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>ARBOUR</td><td>Club Valley</td><td><span class="crs-input">07/07/2026</span></td><td><span class="crs-input">2</span></td><td><span class="crs-input">09/07/2026</span></td><td>4</td><td>1</td><td>0</td><td>2</td><td>0</td><td>0</td><td>CP</td><td>General</td><td>₹2,500</td></tr>
+                    <tr><td>ARBOUR</td><td>Jacuzzi Room</td><td><span class="crs-input">07/07/2026</span></td><td><span class="crs-input">2</span></td><td><span class="crs-input">09/07/2026</span></td><td>2</td><td>0</td><td>0</td><td>2</td><td>1</td><td>0</td><td>MAP</td><td>General</td><td>₹4,750</td></tr>
+                    <tr><td>ARBOUR</td><td>Garden Cottage</td><td><span class="crs-input">--</span></td><td><span class="crs-input">--</span></td><td><span class="crs-input">--</span></td><td>1</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>CP</td><td>General</td><td>₹3,500</td></tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="crs-tabs">
+                <span class="active">Guest Details</span><span>Booked By</span><span>Transportation</span><span>Discount</span><span>Foreigner</span><span>Instruction</span><span>Diplomat</span><span>Special Services</span><span>Advance</span>
+              </div>
+
+              <div class="crs-form">
+                <div class="crs-form-grid">
+                  <label>Guest Name</label><input value="Prakash Jain">
+                  <label>Address</label><input value="Anna Building, Thykkodam">
+                  <label>Mobile</label><input value="9871971729">
+                  <label>Email</label><input value="guest@example.com">
+                  <label>GSTIN</label><input value="">
+                  <label>Guest Type</label><select><option>GENERAL</option><option>VIP</option><option>Corporate</option></select>
+                  <label>Cut-off Date</label><input type="date" value="2026-06-20">
+                  <label>Billing Instructions</label><input value="Balance before arrival. Payment proof attached.">
+                </div>
+                <div class="crs-form-grid">
+                  <label>Reservation Date</label><input type="date" value="2026-06-20">
+                  <label>Company</label><input value="TRAVEL MADDY HOLIDAYS">
+                  <label>Country</label><select><option>INDIA</option></select>
+                  <label>Purpose</label><select><option>Leisure</option><option>Business</option></select>
+                  <label>Segment</label><select><option>B2B</option><option>B2C</option><option>OTA</option></select>
+                  <label>Payment Mode</label><select><option>Company</option><option>UPI</option><option>Bank Transfer</option><option>Gateway</option></select>
+                  <label>Payment Status</label><select><option>Partially Paid</option><option>Unpaid</option><option>Paid</option><option>Refunded</option></select>
+                  <label>Reconfirmed</label><select><option>No</option><option>Yes</option></select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <br>
+          <div class="split">
+            <div class="panel">
+              <h3>Current Operational Flow</h3>
+              <ol>
+                <li>Email / WhatsApp / Agent / Direct request is received.</li>
+                <li>Reservation team enters the booking in current CRS.</li>
+                <li>Confirmation voucher/email is sent manually.</li>
+                <li>Payment proof or advance payment is received.</li>
+                <li>Payment is verified and updated.</li>
+                <li>Reports are used for arrivals, revenue, balance and room nights.</li>
+              </ol>
+            </div>
+            <div class="panel">
+              <h3>Proposed DHISOFT Flow</h3>
+              <ol>
+                <li>Website booking or admin/reservation booking entry.</li>
+                <li>Availability, room and rate selection.</li>
+                <li>Online payment or manual payment recording.</li>
+                <li>Auto confirmation voucher/email.</li>
+                <li>Reservation dashboard and operational reports.</li>
+                <li>AxisRooms sync where applicable.</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="payments" class="route">
+      <div class="section">
+        <div class="container">
+          <div class="section-head">
+            <div><div class="kicker">Payment Workflow</div><h2>Online payment, manual proof, advance, balance and accounts verification.</h2></div>
+            <p>The client workflow shows that payment is not always collected online. The MVP must support payment gateway flow and admin-side manual payment verification for bank transfer, UPI, cash or payment slip references.</p>
+          </div>
+
+          <div class="email-flow">
+            <div class="email-card"><div class="num">1</div><h3>Agent Request</h3><p>Agent sends reservation request by email, phone or WhatsApp.</p></div>
+            <div class="email-card"><div class="num">2</div><h3>Reservation Entry</h3><p>Admin creates booking and captures source, guest, room, tariff and status.</p></div>
+            <div class="email-card"><div class="num">3</div><h3>Voucher Sent</h3><p>Confirmation voucher includes stay, tariff, bank/payment details and policies.</p></div>
+            <div class="email-card"><div class="num">4</div><h3>Payment Proof</h3><p>Agent/customer shares UPI/bank/payment slip reference.</p></div>
+            <div class="email-card"><div class="num">5</div><h3>Accounts Verify</h3><p>Payment is marked unpaid, partially paid or paid with balance follow-up.</p></div>
+          </div>
+
+          <br>
+          <div class="split">
+            <div class="panel">
+              <h3>A. Online Payment Flow</h3>
+              <ol>
+                <li>Guest completes payment using approved payment gateway.</li>
+                <li>Payment success/failure is captured through webhook.</li>
+                <li>Booking status and payment status are updated.</li>
+                <li>Confirmation voucher/email is generated.</li>
+                <li>Booking is pushed/synced to AxisRooms where applicable.</li>
+              </ol>
+            </div>
+            <div class="panel">
+              <h3>B. Manual Payment Flow</h3>
+              <ol>
+                <li>Admin creates booking from direct/agent/company/OTA channel.</li>
+                <li>Customer or agent pays by bank transfer, UPI, cash or approved offline method.</li>
+                <li>Payment proof/reference is recorded by reservation/accounts team.</li>
+                <li>Accounts/admin verifies payment.</li>
+                <li>Advance, balance and payment history remain visible until closed.</li>
+              </ol>
+            </div>
+          </div>
+
+          <br>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Booking Ref</th><th>Source</th><th>Total</th><th>Advance</th><th>Balance</th><th>Payment Mode</th><th>Proof / Ref.</th><th>Status</th><th>Voucher Rule</th></tr></thead>
+              <tbody>
+                <tr><td>RW-3056</td><td>Company</td><td>₹9,500</td><td>₹4,500</td><td>₹5,000</td><td>Bank Transfer</td><td>Payment slip attached</td><td><span class="status warn">Partially Paid</span></td><td>Send reconfirmation after verification</td></tr>
+                <tr><td>RW-3057</td><td>Website</td><td>₹16,048</td><td>₹16,048</td><td>₹0</td><td>Gateway</td><td>Webhook success</td><td><span class="status ok">Paid</span></td><td>Auto voucher</td></tr>
+                <tr><td>RW-3058</td><td>Agent</td><td>₹34,000</td><td>₹0</td><td>₹34,000</td><td>UPI Pending</td><td>Awaiting proof</td><td><span class="status err">Unpaid</span></td><td>Hold voucher or tentative confirmation</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <br>
+          <div class="voucher-preview">
+            <div class="voucher-head">
+              <div class="voucher-logo">RAINWOOD HOTELS</div>
+              <div><div class="voucher-title">Confirmation Voucher / Payment Follow-up</div><div class="small">Demo preview generated from reservation + payment workflow</div></div>
+            </div>
+            <div class="voucher-section">
+              <div class="table-wrap">
+                <table>
+                  <tbody>
+                    <tr><td>Reservation No.</td><td>RW-3056</td><td>Status</td><td>Confirmed / Partially Paid</td></tr>
+                    <tr><td>Guest</td><td>Prakash Jain</td><td>Agent / Company</td><td>TRAVEL MADDY HOLIDAYS</td></tr>
+                    <tr><td>Hotel</td><td>RainWood Aurum Munnar</td><td>Room</td><td>Premium Lake View / CP</td></tr>
+                    <tr><td>Total</td><td>₹9,500</td><td>Advance / Balance</td><td>₹4,500 / ₹5,000</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div class="voucher-section">
+              <strong>Payment Details:</strong> Bank/UPI/payment instructions can be included where approved. Payment proof/reference can be recorded and verified by admin/accounts.
+            </div>
+            <div class="voucher-section">
+              <strong>Terms & Cancellation:</strong> Voucher can include RainWood-approved arrival time, cancellation policy, payment terms and balance follow-up note.
+            </div>
+          </div>
+
+          <br>
+          <div class="notice">Customer/agent self-upload of payment proof can remain optional/future unless approved in MVP UI scope. Admin-side manual payment recording is included in MVP positioning.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="reports" class="route">
+      <div class="section">
+        <div class="container">
+          <div class="section-head">
+            <div><div class="kicker">Reports & Dynamic Reports</div><h2>Hotel-wise reservation summary, room nights, amount, waiting list and advance.</h2></div>
+            <p>This report view is now intentionally closer to the screenshot: hotel-wise grouping, month-wise rows, reservation count, room nights, tentative, total amount, waiting list and advance.</p>
+          </div>
+
+          <div class="hotsoft-report-window">
+            <div class="hotsoft-bluebar"><span>RainWood Reports Console</span><span>Reports · Dynamic Reports · Demo Mode</span></div>
+            <div class="hotsoft-subbar">
+              <span class="filter">Report View</span><span class="filter">From Date: 01/07/2026</span><span class="filter">To Date: 31/08/2026</span><span class="filter">Hotels: Selected</span>
+              <span class="tool">View</span><span class="tool">PDF</span><span class="tool">XLS</span><span class="tool">Excel</span><span class="tool">Print</span>
+            </div>
+            <div class="report-popup">
+              <div class="report-popup-toolbar">Excel · Print · Close</div>
+              <div class="report-caption">Reservation Details Summary From 01-Jul-2026 To 31-Aug-2026</div>
+              <div class="table-wrap" style="border:0;border-radius:0">
+                <table class="gold-report">
+                  <thead><tr><th>Serial</th><th>Month</th><th>Financial Year</th><th>Reservation Count</th><th>Room Nights</th><th>Tentative</th><th>Total Amount</th><th>Waiting List</th><th>Advance</th></tr></thead>
+                  <tbody><tr class="hotel-group"><td colspan="9">Aadisakthi Resort And Spa</td></tr>
+<tr><td>1</td><td>July</td><td>2627</td><td>60</td><td>164</td><td>0</td><td>₹7,78,750.00</td><td>0.00</td><td>₹5,000.00</td></tr>
+<tr class="alt"><td>2</td><td>August</td><td>2627</td><td>22</td><td>77</td><td>0</td><td>₹3,62,205.00</td><td>0.00</td><td>₹0.00</td></tr>
+<tr class="total"><td colspan="3">Aadisakthi Total</td><td>82.00</td><td>241.00</td><td>0.00</td><td>₹11,40,955.00</td><td>0.00</td><td>₹5,000.00</td></tr>
+<tr class="hotel-group"><td colspan="9">Arbour Resort Munnar</td></tr>
+<tr><td>3</td><td>July</td><td>2627</td><td>190</td><td>612</td><td>0</td><td>₹18,88,700.00</td><td>0.00</td><td>₹10,000.00</td></tr>
+<tr class="alt"><td>4</td><td>August</td><td>2627</td><td>59</td><td>265</td><td>0</td><td>₹7,61,111.90</td><td>0.00</td><td>₹0.00</td></tr>
+<tr class="total"><td colspan="3">Arbour Total</td><td>249.00</td><td>880.00</td><td>0.00</td><td>₹26,59,811.90</td><td>0.00</td><td>₹10,000.00</td></tr>
+<tr class="hotel-group"><td colspan="9">Boulevard, Munnar</td></tr>
+<tr><td>5</td><td>July</td><td>2627</td><td>6</td><td>11</td><td>0</td><td>₹46,500.00</td><td>0.00</td><td>₹0.00</td></tr>
+<tr class="alt"><td>6</td><td>August</td><td>2627</td><td>3</td><td>12</td><td>0</td><td>₹47,200.02</td><td>0.00</td><td>₹0.00</td></tr>
+<tr class="total"><td colspan="3">Boulevard Total</td><td>9.00</td><td>23.00</td><td>0.00</td><td>₹93,700.02</td><td>0.00</td><td>₹0.00</td></tr>
+<tr class="hotel-group"><td colspan="9">Casabella Thekkady</td></tr>
+<tr><td>7</td><td>July</td><td>2627</td><td>11</td><td>27</td><td>0</td><td>₹1,34,157.88</td><td>0.00</td><td>₹42,000.00</td></tr>
+<tr class="alt"><td>8</td><td>August</td><td>2627</td><td>4</td><td>5</td><td>0</td><td>₹47,728.00</td><td>0.00</td><td>₹0.00</td></tr>
+<tr class="total"><td colspan="3">Casabella Total</td><td>15.00</td><td>32.00</td><td>0.00</td><td>₹1,81,885.88</td><td>0.00</td><td>₹42,000.00</td></tr>
+<tr class="hotel-group"><td colspan="9">Eve Munnar Luxury Resort</td></tr>
+<tr><td>9</td><td>July</td><td>2627</td><td>143</td><td>501</td><td>0</td><td>₹28,35,968.59</td><td>0.00</td><td>₹68,000.00</td></tr>
+<tr class="alt"><td>10</td><td>August</td><td>2627</td><td>44</td><td>280</td><td>0</td><td>₹14,34,204.02</td><td>0.00</td><td>₹0.00</td></tr>
+<tr class="total"><td colspan="3">Eve Munnar Total</td><td>187.00</td><td>781.00</td><td>0.00</td><td>₹42,70,172.61</td><td>0.00</td><td>₹68,000.00</td></tr>
+<tr class="hotel-group"><td colspan="9">Osprey Cruise Alleppey</td></tr>
+<tr><td>15</td><td>July</td><td>2627</td><td>3</td><td>3</td><td>0</td><td>₹55,860.00</td><td>0.00</td><td>₹0.00</td></tr>
+<tr class="alt"><td>16</td><td>August</td><td>2627</td><td>2</td><td>2</td><td>0</td><td>₹32,000.00</td><td>0.00</td><td>₹0.00</td></tr>
+<tr class="total"><td colspan="3">Osprey Total</td><td>5.00</td><td>5.00</td><td>0.00</td><td>₹87,860.00</td><td>0.00</td><td>₹0.00</td></tr></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <br>
+          <div class="panel">
+            <h3>Expected Arrivals - Operational Report</h3>
+            <div class="table-wrap">
+              <table>
+                <thead><tr><th>Hotel</th><th>Res#</th><th>Guest Name</th><th>Departure</th><th>Room Type</th><th>Cnfd.</th><th>Pax</th><th>Agent/OTA/Direct</th><th>Advance</th><th>Payment Mode</th><th>Instruction</th><th>Mobile</th><th>Amount</th><th>Balance</th><th>Reconfirmed</th></tr></thead>
+                <tbody>
+                  <tr class="group-row"><td colspan="15">Arrival: 07/Jul/2026</td></tr>
+                  <tr><td>Spices Lap Resort</td><td>4253</td><td>Mr. Sachin J.</td><td>08/Jul/26</td><td>Heritage Deluxe</td><td>1</td><td>2</td><td>Skywing Travels</td><td>₹0</td><td>Company</td><td>Tariff and balance note</td><td>9220601628</td><td>₹3,500</td><td>₹3,500</td><td>No</td></tr>
+                  <tr><td>Spices Lap Resort</td><td>4382</td><td>Mr. Mayur Darje</td><td>08/Jul/26</td><td>Heritage Deluxe</td><td>1</td><td>2</td><td>Agoda Company</td><td>₹0</td><td>Company</td><td>Agoda</td><td>91859144874</td><td>₹3,351</td><td>₹3,351</td><td>Yes</td></tr>
+                  <tr><td>Spices Lap Resort</td><td>6092</td><td>Mr. Rohin Philip</td><td>08/Jul/26</td><td>Heritage Deluxe</td><td>2</td><td>4</td><td>Direct</td><td>₹4,000</td><td>Cash</td><td>Balance on arrival</td><td>8592966997</td><td>₹9,000</td><td>₹5,000</td><td>No</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="mvp-boundary"><strong>MVP Boundary:</strong> These are MVP-level operational reports inspired by the current CRS reporting workflow. This is not positioned as full BI/data warehouse or full PMS replacement.</div>
+        </div>
+      </div>
+    </section>
+
+<section id="admin" class="route"><div class="section"><div class="container"><div class="section-head"><div><div class="kicker">Admin Dashboard</div><h2>Reservation dashboard with source, payment, voucher, reports and sync visibility.</h2></div><p>Admin UI mockup for RainWood reservation and accounts users to manage website bookings, manual bookings, payment verification, vouchers, reports and AxisRooms synchronization status.</p></div><div class="admin-grid"><div class="metric"><span>Today Bookings</span><strong>12</strong></div><div class="metric"><span>Manual Entries</span><strong>7</strong></div><div class="metric"><span>Balance Pending</span><strong>₹86K</strong></div><div class="metric"><span>Pending Sync</span><strong>3</strong></div></div><div class="table-wrap"><table><thead><tr><th>Booking Ref</th><th>Source</th><th>Hotel</th><th>Guest</th><th>Advance / Balance</th><th>Payment</th><th>AxisRooms Sync</th><th>Action</th></tr></thead><tbody><tr><td>RW-1048</td><td>Agent</td><td>RainWood Aurum</td><td>Rahul Sharma</td><td>₹8,000 / ₹8,048</td><td><span class="status warn">Partially Paid</span></td><td><span class="status warn">Pending Retry</span></td><td><button class="btn secondary" data-modal="bookingModal">View</button></td></tr><tr><td>RW-1047</td><td>Website</td><td>Spices Lap Resort</td><td>Anita Rao</td><td>₹22,420 / ₹0</td><td><span class="status ok">Paid</span></td><td><span class="status ok">Synced</span></td><td><button class="btn secondary" data-modal="bookingModal">View</button></td></tr><tr><td>RW-1046</td><td>Company</td><td>Lakeshore Resort</td><td>Karthik Menon</td><td>₹0 / ₹34,000</td><td><span class="status err">Unpaid</span></td><td><span class="status err">Failed</span></td><td><button class="btn secondary" data-modal="bookingModal">View</button></td></tr></tbody></table></div></div></div></section>
+    <section id="axisrooms" class="route"><div class="section"><div class="container"><div class="section-head"><div><div class="kicker">AxisRooms Synchronization</div><h2>Inventory, rate, restriction and booking sync flow.</h2></div><p>RainWood remains in control of rates and availability through AxisRooms. The system stores latest channel-manager updates locally for fast search, reservation validation, restriction enforcement and booking sync where applicable.</p></div><div class="flow"><div class="flow-step"><div class="num">1</div><h3>Mapping</h3><p>Property, room and rate-plan mapping.</p></div><div class="flow-step"><div class="num">2</div><h3>Inbound Inventory</h3><p>Date-wise room availability storage.</p></div><div class="flow-step"><div class="num">3</div><h3>Inbound Rates</h3><p>EP, CP, MAP, AP pricing by occupancy.</p></div><div class="flow-step"><div class="num">4</div><h3>Restrictions</h3><p>Stop-sell, CTA, CTD and MLOS rules.</p></div><div class="flow-step"><div class="num">5</div><h3>Booking Push</h3><p>Confirmed website/admin bookings sync back to AxisRooms where applicable.</p></div></div><br><div class="table-wrap"><table><thead><tr><th>Flow</th><th>Purpose</th><th>Website Behavior</th></tr></thead><tbody><tr><td>Inventory Update</td><td>Receive available room counts.</td><td>Prevent booking when rooms are unavailable.</td></tr><tr><td>Rate Update</td><td>Receive date-wise pricing.</td><td>Show mapped rate plans and calculate booking total.</td></tr><tr><td>Restriction Update</td><td>Receive stop-sell, CTA, CTD, MLOS.</td><td>Block invalid check-in/check-out/stay combinations.</td></tr><tr><td>Booking Push</td><td>Notify AxisRooms of direct bookings.</td><td>Show sync status and retry/manual follow-up if needed.</td></tr></tbody></table></div></div></div></section>
+    <section id="contact" class="route"><div class="section"><div class="container"><div class="section-head"><div><div class="kicker">Contact</div><h2>Request a walkthrough of the direct booking prototype.</h2></div><p>This contact screen is static. In production it can become a RainWood enquiry or support entry point.</p></div><div class="split"><div class="panel"><h3>RainWood Booking Engine Demo</h3><p>Review website integration, booking flow, admin dashboard and AxisRooms sync behavior in one shareable SPA file.</p><div class="tag-row"><span class="tag">Single HTML</span><span class="tag">No ZIP needed</span><span class="tag">Responsive</span></div></div><div class="panel"><div class="form-grid"><div><label>Name</label><input value="RainWood Team"></div><div><label>Email</label><input value="reservations@rainwoodhotels.com"></div><div class="full"><label>Message</label><textarea>We would like to review the proposed direct booking engine demo.</textarea></div><button class="btn full" id="sendDemo">Submit Demo Request</button></div></div></div></div></div></section>
+  </main>
+  <footer class="footer"><div class="container"><div class="footer-grid"><div><h3>RainWood Hotels Booking & Reservation Platform</h3><p>Single-file SPA prototype for website booking, reservation management, payment workflow, reports, voucher, admin and AxisRooms synchronization.</p></div><div><h3>Prototype Sections</h3><p><a href="#hotels" data-route="hotels">Hotels</a><br><a href="#booking" data-route="booking">Booking Flow</a><br><a href="#reservation" data-route="reservation">Reservation Flow</a><br><a href="#payments" data-route="payments">Payments</a><br><a href="#reports" data-route="reports">Reports</a><br><a href="#axisrooms" data-route="axisrooms">AxisRooms Sync</a></p></div><div><h3>Prepared By</h3><p>DHISOFT<br>Confidential prototype for RainWood Hotels internal review.</p></div></div><div class="foot-bottom"><span>© 2026 RainWood Hotels Prototype</span><span>Direct Booking Engine · Reservation Management · Payment Workflow · Reports · AxisRooms Synchronization</span></div></div></footer>
+  <div class="toast" id="toast">Action completed.</div>
+  <div class="modal" id="bookingModal"><div class="modal-card"><button class="close" data-close>×</button><h2>Booking RW-1048</h2><p><strong>Guest:</strong> Rahul Sharma</p><p><strong>Hotel:</strong> RainWood Aurum Munnar</p><p><strong>Source:</strong> Agent</p><p><strong>Payment:</strong> <span class="status warn">Partially Paid</span> · Advance ₹8,000 · Balance ₹8,048</p><p><strong>AxisRooms Sync:</strong> <span class="status warn">Pending Retry</span></p><div class="notice">This modal demonstrates admin visibility for CRS-style reservation details, source, payment verification, voucher, remarks and channel-manager sync status.</div></div></div>
+  <script>
+    const routes=[...document.querySelectorAll('.route')], navs=[...document.querySelectorAll('[data-route]')], navLinksWrap=document.getElementById('navlinks'), toast=document.getElementById('toast');
+    function showToast(message){toast.textContent=message;toast.classList.add('show');setTimeout(()=>toast.classList.remove('show'),2300)}
+    function setRoute(route){const id=route||'home';routes.forEach(s=>s.classList.toggle('active',s.id===id));navs.forEach(a=>a.classList.toggle('active',a.dataset.route===id));if(location.hash!=='#'+id) history.pushState(null,'','#'+id);window.scrollTo({top:0,behavior:'smooth'});navLinksWrap.classList.remove('open')}
+    document.addEventListener('click',e=>{const routeEl=e.target.closest('[data-route], [data-route-btn]');if(routeEl){e.preventDefault();setRoute(routeEl.dataset.route||routeEl.dataset.routeBtn)}const next=e.target.closest('[data-next-step]');if(next){const step=next.dataset.nextStep;setBookingStep(step);showToast('Booking step updated: '+step)}const modalBtn=e.target.closest('[data-modal]');if(modalBtn){document.getElementById(modalBtn.dataset.modal).classList.add('show')}if(e.target.matches('[data-close]')||e.target.classList.contains('modal')){e.target.closest('.modal').classList.remove('show')}});
+    document.getElementById('hamburger').addEventListener('click',()=>navLinksWrap.classList.toggle('open'));
+    function setBookingStep(step){document.querySelectorAll('.booking-step').forEach(el=>el.classList.toggle('active',el.id==='step-'+step));document.querySelectorAll('.booking-nav').forEach(el=>el.classList.toggle('active',el.dataset.step===step))}
+    document.querySelectorAll('.booking-nav').forEach(btn=>btn.addEventListener('click',()=>setBookingStep(btn.dataset.step)));
+    document.getElementById('sendDemo').addEventListener('click',()=>showToast('Demo request submitted in static prototype mode.'));
+    window.addEventListener('hashchange',()=>setRoute(location.hash.replace('#','')||'home')); setRoute(location.hash.replace('#','')||'home');
+  </script>
+</body>
+</html>

@@ -1,0 +1,2 @@
+import { defineConfig,devices } from '@playwright/test';
+export default defineConfig({testDir:'./e2e',fullyParallel:false,retries:1,use:{baseURL:process.env.E2E_BASE_URL??'http://127.0.0.1:6080',trace:'on-first-retry'},projects:[{name:'chromium',use:{...devices['Desktop Chrome']}},{name:'mobile',use:{...devices['Pixel 7']}}],webServer:{command:'npm run dev -- --host 127.0.0.1 --strictPort',url:'http://127.0.0.1:6080',reuseExistingServer:true,timeout:120000}});

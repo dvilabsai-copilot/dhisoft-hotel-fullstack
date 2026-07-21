@@ -1,0 +1,9 @@
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common'; import { ApiTags } from '@nestjs/swagger'; import { UserRole } from '@prisma/client'; import { Request } from 'express'; import { Public } from '../common/public.decorator'; import { Roles } from '../common/roles.decorator'; import { tenantIdFrom } from '../common/tenant'; import { CancelReservationDto,CreateHoldDto,ManualReservationDto } from './dto/reservation.dto'; import { ReservationsService } from './reservations.service';
+@ApiTags('reservations') @Controller('reservations') export class ReservationsController {constructor(private service:ReservationsService){}
+ @Public() @Post('hold') hold(@Req() req:Request,@Body() dto:CreateHoldDto){return this.service.createHold(tenantIdFrom(req),dto);}
+ @Roles(UserRole.TENANT_ADMIN,UserRole.RESERVATION_MANAGER,UserRole.RESERVATION_AGENT) @Post('manual') manual(@Req() req:Request,@Body() dto:ManualReservationDto){return this.service.manual(tenantIdFrom(req),dto,(req.user as any).sub);}
+ @Roles(UserRole.TENANT_ADMIN,UserRole.RESERVATION_MANAGER,UserRole.RESERVATION_AGENT,UserRole.ACCOUNTS,UserRole.VIEWER) @Get() list(@Req() req:Request){return this.service.list(tenantIdFrom(req));}
+ @Roles(UserRole.TENANT_ADMIN) @Post('maintenance/expire-holds') expire(@Req() req:Request){return this.service.expireHolds(tenantIdFrom(req));}
+ @Roles(UserRole.TENANT_ADMIN,UserRole.RESERVATION_MANAGER,UserRole.RESERVATION_AGENT,UserRole.ACCOUNTS,UserRole.VIEWER) @Get(':id') get(@Req() req:Request,@Param('id') id:string){return this.service.get(tenantIdFrom(req),id);}
+ @Roles(UserRole.TENANT_ADMIN,UserRole.RESERVATION_MANAGER) @Post(':id/cancel') cancel(@Req() req:Request,@Param('id') id:string,@Body() dto:CancelReservationDto){return this.service.cancel(tenantIdFrom(req),id,dto.reason);}
+}
