@@ -65,6 +65,12 @@ async function main() {
   expectStatus('health', health.status, 200);
   checks.push('health');
 
+  const healthLive = await request('/health/live');
+  expectStatus('health live', healthLive.status, 200);
+  const healthReady = await request('/health/ready');
+  expectStatus('health ready', healthReady.status, 200);
+  checks.push('live/readiness health');
+
   const publicSite = await request('/website/public', { tenant: tenantSlug });
   expectStatus('public website', publicSite.status, 200);
   checks.push('public website');
@@ -123,3 +129,5 @@ main().catch(error => {
   console.error(error instanceof Error ? error.message : 'API smoke failed');
   process.exitCode = 1;
 });
+
+export {};

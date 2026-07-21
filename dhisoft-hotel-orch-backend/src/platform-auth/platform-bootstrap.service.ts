@@ -31,6 +31,7 @@ export class PlatformBootstrapService implements OnApplicationBootstrap {
     await this.ensureStarterPlan();
     await this.ensureIntegrationProviders();
     await this.ensureRainWoodTheme();
+    await this.activateRainWoodForExplicitBootstrap();
     await this.ensureInitialOwner();
   }
 
@@ -156,6 +157,15 @@ export class PlatformBootstrapService implements OnApplicationBootstrap {
         },
       });
     }
+  }
+
+  private async activateRainWoodForExplicitBootstrap() {
+    if (this.config.get<string>('RAINWOOD_BOOTSTRAP_ACTIVE') !== 'true') return;
+
+    await this.prisma.tenant.updateMany({
+      where: { slug: 'rainwood', status: 'ONBOARDING' },
+      data: { status: 'ACTIVE' },
+    });
   }
 
   private async ensureInitialOwner() {
