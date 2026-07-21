@@ -9,8 +9,10 @@ datasource db {
 }
 
 enum TenantStatus {
+  ONBOARDING
   ACTIVE
   SUSPENDED
+  ARCHIVED
 }
 enum UserRole {
   SUPER_ADMIN
@@ -24,6 +26,70 @@ enum UserRole {
 enum UserStatus {
   ACTIVE
   DISABLED
+}
+
+/// Kept only for migration compatibility. Platform operators use PlatformUserRole.
+enum PlatformUserRole {
+  PLATFORM_OWNER
+  SUPER_ADMIN
+  SUPPORT_ADMIN
+  BILLING_ADMIN
+  READ_ONLY_AUDITOR
+}
+
+enum PlatformUserStatus {
+  ACTIVE
+  DISABLED
+}
+
+enum BillingInterval {
+  MONTHLY
+  ANNUAL
+  CUSTOM
+}
+
+enum SubscriptionStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELLED
+  EXPIRED
+}
+
+enum DomainType {
+  SUBDOMAIN
+  CUSTOM
+}
+
+enum DomainStatus {
+  PENDING_VERIFICATION
+  VERIFIED
+  ACTIVE
+  FAILED
+  DISABLED
+}
+
+enum ThemeCatalogueStatus {
+  DRAFT
+  PUBLISHED
+  DEPRECATED
+}
+
+enum SupportSessionStatus {
+  PENDING_APPROVAL
+  APPROVED
+  ACTIVE
+  REJECTED
+  REVOKED
+  EXPIRED
+}
+
+enum IntegrationHealth {
+  UNKNOWN
+  HEALTHY
+  DEGRADED
+  DOWN
 }
 enum PageStatus {
   DRAFT
@@ -94,8 +160,17 @@ enum EnquiryStatus {
 model Tenant {
   id String @id @default(uuid()) @db.Uuid
   name String
+  legalName String?
   slug String @unique
-  status TenantStatus @default(ACTIVE)
+  status TenantStatus @default(ONBOARDING)
+  companyEmail String?
+  companyPhone String?
+  timezone String @default("Asia/Kolkata")
+  currency String @default("INR")
+  onboardingState Json?
+  archivedAt DateTime?
+  createdByPlatformUserId String? @db.Uuid
+  createdByPlatformUser PlatformUser? @relation("TenantCreatedBy", fields:[createdByPlatformUserId], references:[id], onDelete:SetNull)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   users User[]
@@ -111,6 +186,14 @@ model Tenant {
   syncJobs SyncJob[]
   auditLogs AuditLog[]
   enquiries Enquiry[]
+  subscriptions TenantSubscription[]
+  features TenantFeature[]
+  domains TenantDomain[]
+  usageSnapshots TenantUsageSnapshot[]
+  supportSessions SupportSession[]
+  platformAuditLogs PlatformAuditLog[]
+  integrationCredentials TenantIntegrationCredential[]
+  @@index([status,createdAt])
 }
 
 model User {
@@ -125,6 +208,7 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   propertyAccess UserPropertyAccess[]
+  approvedSupportSessions SupportSession[] @relation("SupportApprovedBy")
   @@unique([tenantId,email])
   @@index([tenantId,role])
 }
@@ -243,7 +327,9 @@ model InventoryDay {
 model SiteTheme {
   id String @id @default(uuid()) @db.Uuid
   tenantId String @db.Uuid
+  catalogueThemeId String? @db.Uuid
   tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  catalogueTheme ThemeCatalogue? @relation(fields:[catalogueThemeId], references:[id], onDelete:SetNull)
   name String
   key String
   config Json
@@ -252,6 +338,7 @@ model SiteTheme {
   updatedAt DateTime @updatedAt
   pages SitePage[]
   @@unique([tenantId,key])
+  @@index([catalogueThemeId])
 }
 
 model SitePage {
@@ -500,3 +587,208 @@ model Enquiry {
   updatedAt DateTime @updatedAt
   @@index([tenantId,status,createdAt])
 }
+
+model PlatformUser {
+  id String @id @default(uuid()) @db.Uuid
+  email String @unique
+  passwordHash String
+  name String
+  role PlatformUserRole
+  status PlatformUserStatus @default(ACTIVE)
+  mfaRequired Boolean @default(true)
+  lastLoginAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdTenants Tenant[] @relation("TenantCreatedBy")
+  requestedSupportSessions SupportSession[] @relation("SupportRequestedBy")
+  auditLogs PlatformAuditLog[] @relation("PlatformAuditActor")
+  @@index([role,status])
+}
+
+model SubscriptionPlan {
+  id String @id @default(uuid()) @db.Uuid
+  code String @unique
+  name String
+  description String?
+  billingInterval BillingInterval
+  monthlyPrice Decimal? @db.Decimal(12,2)
+  annualPrice Decimal? @db.Decimal(12,2)
+  setupFee Decimal @db.Decimal(12,2) @default(0)
+  currency String @default("INR")
+  limits Json
+  features Json
+  active Boolean @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  subscriptions TenantSubscription[]
+}
+
+model TenantSubscription {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  planId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  plan SubscriptionPlan @relation(fields:[planId], references:[id], onDelete:Restrict)
+  status SubscriptionStatus
+  startsAt DateTime
+  trialEndsAt DateTime?
+  currentPeriodEndsAt DateTime?
+  cancelledAt DateTime?
+  autoRenew Boolean @default(true)
+  commercialTerms Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([tenantId,status])
+  @@index([status,currentPeriodEndsAt])
+}
+
+model FeatureDefinition {
+  id String @id @default(uuid()) @db.Uuid
+  key String @unique
+  name String
+  description String?
+  defaultEnabled Boolean @default(false)
+  metadata Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenantFeatures TenantFeature[]
+}
+
+model TenantFeature {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  featureId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  feature FeatureDefinition @relation(fields:[featureId], references:[id], onDelete:Cascade)
+  enabled Boolean
+  config Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([tenantId,featureId])
+  @@index([tenantId,enabled])
+}
+
+model TenantDomain {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  domain String @unique
+  type DomainType
+  status DomainStatus @default(PENDING_VERIFICATION)
+  verificationToken String @unique
+  primary Boolean @default(false)
+  verifiedAt DateTime?
+  sslStatus String @default("PENDING")
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([tenantId,status])
+}
+
+model ThemeCatalogue {
+  id String @id @default(uuid()) @db.Uuid
+  key String
+  version Int
+  name String
+  description String?
+  status ThemeCatalogueStatus @default(DRAFT)
+  config Json
+  sectionSchema Json
+  previewUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenantThemes SiteTheme[]
+  @@unique([key,version])
+  @@index([status,updatedAt])
+}
+
+model TenantUsageSnapshot {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  periodStart DateTime
+  periodEnd DateTime
+  properties Int @default(0)
+  activeUsers Int @default(0)
+  reservations Int @default(0)
+  bookingValue Decimal @db.Decimal(14,2) @default(0)
+  storageBytes BigInt @default(0)
+  apiRequests BigInt @default(0)
+  createdAt DateTime @default(now())
+  @@unique([tenantId,periodStart,periodEnd])
+  @@index([periodEnd])
+}
+
+model SupportSession {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  requestedById String @db.Uuid
+  approvedByTenantUserId String? @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  requestedBy PlatformUser @relation("SupportRequestedBy", fields:[requestedById], references:[id], onDelete:Cascade)
+  approvedByTenantUser User? @relation("SupportApprovedBy", fields:[approvedByTenantUserId], references:[id], onDelete:SetNull)
+  status SupportSessionStatus @default(PENDING_APPROVAL)
+  reason String @db.Text
+  requiresTenantApproval Boolean @default(true)
+  approvedAt DateTime?
+  activatedAt DateTime?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([tenantId,status,expiresAt])
+  @@index([requestedById,status])
+}
+
+model PlatformAuditLog {
+  id String @id @default(uuid()) @db.Uuid
+  actorPlatformUserId String? @db.Uuid
+  tenantId String? @db.Uuid
+  actor PlatformUser? @relation("PlatformAuditActor", fields:[actorPlatformUserId], references:[id], onDelete:SetNull)
+  tenant Tenant? @relation(fields:[tenantId], references:[id], onDelete:SetNull)
+  actorEmail String?
+  action String
+  entityType String
+  entityId String
+  metadata Json?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  @@index([createdAt])
+  @@index([tenantId,createdAt])
+  @@index([entityType,entityId,createdAt])
+}
+
+model PlatformIntegrationProvider {
+  id String @id @default(uuid()) @db.Uuid
+  key String @unique
+  name String
+  category String
+  enabled Boolean @default(false)
+  publicConfig Json?
+  health IntegrationHealth @default(UNKNOWN)
+  lastCheckedAt DateTime?
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  tenantCredentials TenantIntegrationCredential[]
+}
+
+model TenantIntegrationCredential {
+  id String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  providerId String @db.Uuid
+  tenant Tenant @relation(fields:[tenantId], references:[id], onDelete:Cascade)
+  provider PlatformIntegrationProvider @relation(fields:[providerId], references:[id], onDelete:Cascade)
+  encryptedConfig String @db.Text
+  enabled Boolean @default(true)
+  health IntegrationHealth @default(UNKNOWN)
+  lastTestedAt DateTime?
+  lastError String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@unique([tenantId,providerId])
+  @@index([tenantId,enabled])
+}
+
+

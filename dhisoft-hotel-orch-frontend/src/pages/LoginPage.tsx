@@ -14,6 +14,7 @@ export default function LoginPage() {
       const response = await api.post('/auth/login', { email, password });
       localStorage.setItem('hotel_os_token', response.data.accessToken);
       localStorage.setItem('hotel_os_user', JSON.stringify(response.data.user));
+      if (response.data.user?.tenant?.slug) localStorage.setItem('hotel_os_tenant_slug', response.data.user.tenant.slug);
       nav('/admin');
     } catch (err: any) {
       setError(err.response?.data?.message ?? 'Login failed');
