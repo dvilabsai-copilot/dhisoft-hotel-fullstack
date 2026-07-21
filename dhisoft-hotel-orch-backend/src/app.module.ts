@@ -75,20 +75,9 @@ export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(TenantMiddleware)
-      .forRoutes(
-        'auth',
-        'properties',
-        'website',
-        'availability',
-        'reservations',
-        'payments',
-        'reports',
-        'axisrooms',
-        'media',
-        'enquiries',
-        'offers',
-        'users',
-        'support-access',
-      );
+      // Apply globally so URI-versioned routes (for example /api/v1/auth)
+      // receive tenant context. TenantMiddleware explicitly bypasses health
+      // and platform control-plane routes before resolving a tenant.
+      .forRoutes('*');
   }
 }
