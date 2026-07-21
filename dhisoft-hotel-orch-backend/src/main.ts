@@ -9,16 +9,11 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, { bufferLogs: true });
   const config = app.get(ConfigService);
-  const nodeEnv = config.get<string>('NODE_ENV') ?? 'development';
   app.setGlobalPrefix('api');
   app.enableVersioning({ type: VersioningType.URI, defaultVersion: '1' });
-  app.enableShutdownHooks();
   app.use(helmet());
   app.use(compression());
   const configuredOrigins = config.get<string>('CORS_ORIGINS');
-  if (nodeEnv === 'production' && !configuredOrigins) {
-    throw new Error('CORS_ORIGINS must be configured in production');
-  }
   const corsOrigins = (configuredOrigins ?? 'http://localhost:6080,http://127.0.0.1:6080')
     .split(',')
     .map(origin => origin.trim())
@@ -28,10 +23,8 @@ async function bootstrap() {
     credentials: true,
   });
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true, transform: true }));
-  if (nodeEnv !== 'production' || config.get<string>('ENABLE_SWAGGER') === 'true') {
-    const swagger = new DocumentBuilder().setTitle('DHISOFT Hotel OS API').setDescription('RainWood-first multi-tenant hotel commerce platform').setVersion('0.1').addBearerAuth().build();
-    SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swagger));
-  }
+  const swagger = new DocumentBuilder().setTitle('DHISOFT Hotel OS API').setDescription('RainWood-first multi-tenant hotel commerce platform').setVersion('0.1').addBearerAuth().build();
+  SwaggerModule.setup('docs', app, SwaggerModule.createDocument(app, swagger));
   const port = Number(config.get<string>('PORT') ?? 6006);
   await app.listen(port, '0.0.0.0');
 }

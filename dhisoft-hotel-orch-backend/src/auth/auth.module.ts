@@ -5,25 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
-
 @Module({
-  imports: [
-    PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (config: ConfigService) => ({
-        secret: config.getOrThrow<string>('TENANT_JWT_SECRET'),
-        signOptions: {
-          expiresIn: config.get<string>('JWT_EXPIRES_IN') ?? '8h',
-          issuer: 'dhisoft-hotel-os',
-          audience: 'dhisoft-tenant-admin',
-        },
-      }),
-    }),
-  ],
-  controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [AuthService, JwtModule],
-})
-export class AuthModule {}
+  imports:[PassportModule, JwtModule.registerAsync({ imports:[ConfigModule], inject:[ConfigService], useFactory:(c:ConfigService)=>({ secret:c.get<string>('JWT_SECRET') ?? 'dev-secret-change-me', signOptions:{ expiresIn:c.get<string>('JWT_EXPIRES_IN') ?? '8h' } }) })],
+  controllers:[AuthController], providers:[AuthService,JwtStrategy], exports:[AuthService]
+}) export class AuthModule {}

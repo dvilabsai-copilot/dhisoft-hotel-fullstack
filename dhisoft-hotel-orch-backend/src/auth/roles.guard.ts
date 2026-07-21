@@ -1,33 +1,9 @@
-import {
-  CanActivate,
-  ExecutionContext,
-  ForbiddenException,
-  Injectable,
-} from '@nestjs/common';
-import { UserRole } from '@prisma/client';
+import { CanActivate, ExecutionContext, ForbiddenException, Injectable } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { UserRole } from '@prisma/client';
 import { ROLES_KEY } from '../common/roles.decorator';
-
 @Injectable()
 export class RolesGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
-
-  canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY, [
-      context.getHandler(),
-      context.getClass(),
-    ]);
-    if (!roles?.length) return true;
-    const user = context.switchToHttp().getRequest().user as
-      | Express.TenantRequestUser
-      | undefined;
-    if (
-      !user ||
-      !['TENANT', 'SUPPORT'].includes(user.kind) ||
-      !roles.includes(user.role)
-    ) {
-      throw new ForbiddenException('Insufficient tenant role');
-    }
-    return true;
-  }
+  constructor(private reflector:Reflector){}
+  canActivate(ctx:ExecutionContext){ const roles=this.reflector.getAllAndOverride<UserRole[]>(ROLES_KEY,[ctx.getHandler(),ctx.getClass()]); if(!roles?.length)return true; const req=ctx.switchToHttp().getRequest(); if(!req.user || !roles.includes(req.user.role)) throw new ForbiddenException('Insufficient role'); return true; }
 }
