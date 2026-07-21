@@ -1,7 +1,7 @@
 # Local UI Validation Report
 
 Date: 2026-07-21
-Baseline commit: `4a22b06` plus uncommitted working-tree changes audited in this run
+Validated commit: `651ef4b9c30ce2f66caf017e4114daf46ed247db`
 Browser: Codex In-app Browser (Chromium-backed)
 Viewports: default desktop; 390x844 mobile override (reset after test)
 Frontend: `http://127.0.0.1:6080`
