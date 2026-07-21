@@ -32,10 +32,11 @@ import { PlatformIntegrationsModule } from './platform-integrations/platform-int
 import { PlatformAuditModule } from './platform-audit/platform-audit.module';
 import { PlatformDashboardModule } from './platform-dashboard/platform-dashboard.module';
 import { PlatformHealthModule } from './platform-health/platform-health.module';
+import { validateEnvironment } from './config/environment';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }),
+    ConfigModule.forRoot({ isGlobal: true, validate: validateEnvironment }),
     PrismaModule,
     PlatformCommonModule,
     AuthModule,

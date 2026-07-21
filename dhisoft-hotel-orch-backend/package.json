@@ -15,6 +15,7 @@
     "test": "jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
     "test:smoke": "ts-node test/api-smoke.ts",
+    "test:critical-smoke": "ts-node test/critical-smoke.ts",
     "prisma:generate": "prisma generate --schema prisma/schema.prisma",
     "prisma:validate": "prisma validate --schema prisma/schema.prisma",
     "prisma:migrate": "prisma migrate dev --schema prisma/schema.prisma",

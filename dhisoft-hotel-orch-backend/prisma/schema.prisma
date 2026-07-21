@@ -497,7 +497,7 @@ model Payment {
   status PaymentStatus @default(INITIATED)
   provider String
   providerReference String?
-  idempotencyKey String @unique
+  idempotencyKey String
   proofUrl String?
   notes String?
   verifiedById String? @db.Uuid
@@ -506,6 +506,7 @@ model Payment {
   updatedAt DateTime @updatedAt
   events PaymentEvent[]
   @@index([tenantId,reservationId,status])
+  @@unique([tenantId,idempotencyKey])
 }
 
 model PaymentEvent {
