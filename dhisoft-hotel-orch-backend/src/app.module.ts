@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  RequestMethod,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { AuthModule } from './auth/auth.module';
@@ -73,6 +78,16 @@ import { validateEnvironment } from './config/environment';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TenantMiddleware).forRoutes('*');
+    consumer
+      .apply(TenantMiddleware)
+      .exclude(
+        { path: 'health', method: RequestMethod.ALL },
+        { path: 'health/(.*)', method: RequestMethod.ALL },
+        { path: 'platform-auth', method: RequestMethod.ALL },
+        { path: 'platform-auth/(.*)', method: RequestMethod.ALL },
+        { path: 'platform', method: RequestMethod.ALL },
+        { path: 'platform/(.*)', method: RequestMethod.ALL },
+      )
+      .forRoutes('*');
   }
 }
