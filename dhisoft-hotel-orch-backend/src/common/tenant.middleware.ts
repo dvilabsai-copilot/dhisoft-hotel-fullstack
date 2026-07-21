@@ -14,15 +14,21 @@ export class TenantMiddleware implements NestMiddleware {
     // Depending on the adapter/proxy, Express may expose the route through
     // `path`, `url`, or `originalUrl`. Use all available forms so public
     // control-plane endpoints can never fall through to tenant resolution.
-    const routePath = [request.path, request.url, request.originalUrl]
+    const routePath = [
+      request.path,
+      request.url,
+      request.originalUrl,
+      request.baseUrl,
+      request.route?.path,
+    ]
       .filter(Boolean)
       .join(' ')
       .toLowerCase();
     if (
-      routePath.includes('/health') ||
-      routePath.includes('/docs') ||
-      routePath.includes('/platform-auth') ||
-      routePath.includes('/platform/')
+      /(^|\/)health(\/|$)/.test(routePath) ||
+      /(^|\/)docs(\/|$)/.test(routePath) ||
+      routePath.includes('platform-auth') ||
+      /(^|\/)platform(\/|$)/.test(routePath)
     ) {
       return next();
     }
