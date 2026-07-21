@@ -1,8 +1,9 @@
+import { RequiresFeature } from '../common/feature.decorator';
 import { Body, Controller, Get, Param, Patch, Post, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger'; import { UserRole } from '@prisma/client'; import { Request } from 'express';
 import { Public } from '../common/public.decorator'; import { Roles } from '../common/roles.decorator'; import { tenantIdFrom } from '../common/tenant';
 import { CreatePageDto,ThemeDto,UpdatePageDto } from './dto/page.dto'; import { WebsiteService } from './website.service';
-@ApiTags('website-builder') @Controller('website') export class WebsiteController {
+@ApiTags('website-builder') @RequiresFeature('WEBSITE_BUILDER') @Controller('website') export class WebsiteController {
  constructor(private service:WebsiteService){}
  @Public() @Get('public') publicSite(@Req() req:Request){return this.service.publicSite(tenantIdFrom(req));}
  @Roles(UserRole.TENANT_ADMIN,UserRole.CONTENT_EDITOR) @Get('pages') pages(@Req() req:Request){return this.service.listPages(tenantIdFrom(req));}
