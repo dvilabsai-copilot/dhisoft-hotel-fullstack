@@ -184,13 +184,6 @@ export class PlatformBootstrapService implements OnApplicationBootstrap {
       );
       return;
     }
-    if (password.length < 12) {
-      this.logger.error(
-        'PLATFORM_BOOTSTRAP_PASSWORD must contain at least 12 characters.',
-      );
-      return;
-    }
-
     const syncConfiguredOwner =
       this.config.get<string>('PLATFORM_BOOTSTRAP_SYNC') === 'true';
     const existingConfiguredOwner = await this.prisma.platformUser.findUnique({
