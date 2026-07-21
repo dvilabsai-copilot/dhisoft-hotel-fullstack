@@ -32,7 +32,6 @@ async function main(){
  for(const page of standardPages){await p.sitePage.upsert({where:{tenantId_slug:{tenantId:tenant.id,slug:page.slug}},update:{themeId:theme.id,draftContent:{sections:page.sections},publishedContent:{sections:page.sections},status:'PUBLISHED'},create:{tenantId:tenant.id,themeId:theme.id,title:page.title,slug:page.slug,status:'PUBLISHED',draftContent:{sections:page.sections},publishedContent:{sections:page.sections},seo:{title:`${page.title} | RainWood Hotels`,description:`RainWood Hotels ${page.title.toLowerCase()}.`},navigation:[],publishedAt:new Date()}})}
  const media=[{tenantId:tenant.id,filename:'rainwood-aurum-exterior.jpg',url:images.aurum[0],mimeType:'image/jpeg',sizeBytes:0,altText:'RainWood Aurum exterior'},{tenantId:tenant.id,filename:'rainwood-room.jpg',url:images.aurum[1],mimeType:'image/jpeg',sizeBytes:0,altText:'RainWood premium room'}];
  for(const asset of media){const existing=await p.mediaAsset.findFirst({where:{tenantId:asset.tenantId,filename:asset.filename}});if(!existing) await p.mediaAsset.create({data:asset});}
- await p.user.update({where:{tenantId_email:{tenantId:tenant.id,email:adminEmail}},data:{passwordHash,status:'ACTIVE',role:'TENANT_ADMIN',name:'RainWood Admin'}});
  console.log({tenant:tenant.slug,seeded:true});
 }
 main().finally(()=>p.$disconnect());

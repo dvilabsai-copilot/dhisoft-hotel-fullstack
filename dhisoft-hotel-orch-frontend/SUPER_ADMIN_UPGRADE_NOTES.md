@@ -1,1 +1,0 @@
-This source includes the separate DHISOFT `/platform-login` and `/platform-admin` control plane while preserving the RainWood tenant application. See the accompanying upgrade notes for backend migration and security requirements.

@@ -6,7 +6,6 @@
 **/build/
 **/*.tsbuildinfo
 **/coverage/
-**/test-results/
 **/.prisma/
 *.log
 *.zip

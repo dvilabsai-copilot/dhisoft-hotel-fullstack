@@ -3,24 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "license": "UNLICENSED",
-  "engines": {
-    "node": ">=20.19.0 <25"
-  },
   "scripts": {
-    "postinstall": "prisma generate --schema prisma/schema.prisma",
-    "build": "prisma generate --schema prisma/schema.prisma && tsc -p tsconfig.build.json",
+    "build": "prisma generate && tsc -p tsconfig.build.json",
     "start": "node dist/src/main.js",
-    "start:dev": "prisma generate --schema prisma/schema.prisma && ts-node -r tsconfig-paths/register src/main.ts",
+    "start:dev": "prisma generate && ts-node -r tsconfig-paths/register src/main.ts",
     "start:prod": "node dist/src/main.js",
     "test": "jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json --runInBand",
-    "test:smoke": "ts-node test/api-smoke.ts",
-    "prisma:generate": "prisma generate --schema prisma/schema.prisma",
-    "prisma:validate": "prisma validate --schema prisma/schema.prisma",
-    "prisma:migrate": "prisma migrate dev --schema prisma/schema.prisma",
-    "prisma:migrate:deploy": "prisma migrate deploy --schema prisma/schema.prisma",
-    "prisma:deploy": "npm run prisma:migrate:deploy",
-    "prisma:seed": "prisma db seed --schema prisma/schema.prisma",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:deploy": "prisma migrate deploy",
+    "prisma:seed": "prisma db seed",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
